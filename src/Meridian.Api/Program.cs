@@ -3,6 +3,7 @@ using System.Text;
 using Meridian.Api.Authorization;
 using Meridian.Api.Configuration;
 using Meridian.Api.Filters;
+using Meridian.Api.Middleware;
 using Meridian.Api.Security;
 using Meridian.Bll;
 using Meridian.Bll.Security;
@@ -63,6 +64,8 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .AddRequirements(new BoardOwnerRequirement()));
 
+builder.Services.AddTransient<CorrelationIdMiddleware>();
+
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 
 // Swagger with JWT bearer support (Authorize button).
@@ -94,6 +97,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Correlation id first, so every subsequent log line (including the request
+// summary) carries it.
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        if (httpContext.Items.TryGetValue(CorrelationIdMiddleware.ItemsKey, out var correlationId)
+            && correlationId is string value)
+        {
+            diagnosticContext.Set(CorrelationIdMiddleware.ItemsKey, value);
+        }
+    };
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
