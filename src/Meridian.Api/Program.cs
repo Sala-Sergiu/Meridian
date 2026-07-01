@@ -12,8 +12,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Structured logging via Serilog, configured from appsettings ("Serilog" section).
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // Layers (Dal referenced only here, in the composition root).
 builder.Services.AddDal(builder.Configuration);
