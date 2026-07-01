@@ -20,8 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Needed to exercise the Api request middleware (HttpContext, ProblemDetails). -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\src\Meridian.Bll\Meridian.Bll.csproj" />
     <ProjectReference Include="..\..\src\Meridian.Domain\Meridian.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Meridian.Api\Meridian.Api.csproj" />
   </ItemGroup>
 
 </Project>

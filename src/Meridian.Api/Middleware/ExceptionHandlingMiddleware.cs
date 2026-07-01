@@ -90,10 +90,18 @@ public class ExceptionHandlingMiddleware : IMiddleware
 
     private static void AddCorrelationId(HttpContext context, ProblemDetails problem)
     {
-        if (context.Items.TryGetValue(CorrelationIdMiddleware.ItemsKey, out var value) && value is string correlationId)
+        var correlationId = GetCorrelationId(context);
+        if (correlationId is not null)
         {
             problem.Extensions["correlationId"] = correlationId;
         }
+    }
+
+    private static string? GetCorrelationId(HttpContext context)
+    {
+        return context.Items.TryGetValue(CorrelationIdMiddleware.ItemsKey, out var value) && value is string correlationId
+            ? correlationId
+            : null;
     }
 
     private static async Task WriteProblemAsync(HttpContext context, ProblemDetails problem)
@@ -107,6 +115,14 @@ public class ExceptionHandlingMiddleware : IMiddleware
         context.Response.Clear();
         context.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
         context.Response.ContentType = ProblemContentType;
+
+        // Response.Clear() dropped the header set by the correlation middleware — re-apply it
+        // so error responses still carry X-Correlation-ID.
+        var correlationId = GetCorrelationId(context);
+        if (correlationId is not null)
+        {
+            context.Response.Headers[CorrelationIdMiddleware.HeaderName] = correlationId;
+        }
 
         // Serialize with the runtime type so ValidationProblemDetails.Errors is included.
         await context.Response.WriteAsync(JsonSerializer.Serialize(problem, problem.GetType(), SerializerOptions));
