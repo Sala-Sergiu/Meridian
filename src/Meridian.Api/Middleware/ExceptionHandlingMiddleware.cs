@@ -33,27 +33,34 @@ public class ExceptionHandlingMiddleware : IMiddleware
         }
         catch (ValidationException validationException)
         {
+            var correlationId = GetCorrelationId(context);
+
             _logger.LogWarning(
                 validationException,
-                "Validation failed for {Method} {Path}",
+                "Validation failed for {Method} {Path} (CorrelationId: {CorrelationId})",
                 context.Request.Method,
-                context.Request.Path);
+                context.Request.Path,
+                correlationId);
 
-            await WriteProblemAsync(context, BuildValidationProblem(context, validationException));
+            await WriteProblemAsync(context, BuildValidationProblem(context, validationException, correlationId), correlationId);
         }
         catch (Exception exception)
         {
+            var correlationId = GetCorrelationId(context);
+
+            // Full exception (message + stack) goes to the log only — never to the response.
             _logger.LogError(
                 exception,
-                "Unhandled exception for {Method} {Path}",
+                "Unhandled exception for {Method} {Path} (CorrelationId: {CorrelationId})",
                 context.Request.Method,
-                context.Request.Path);
+                context.Request.Path,
+                correlationId);
 
-            await WriteProblemAsync(context, BuildUnexpectedProblem(context));
+            await WriteProblemAsync(context, BuildUnexpectedProblem(context, correlationId), correlationId);
         }
     }
 
-    private static ValidationProblemDetails BuildValidationProblem(HttpContext context, ValidationException exception)
+    private static ValidationProblemDetails BuildValidationProblem(HttpContext context, ValidationException exception, string? correlationId)
     {
         var errors = exception.Errors
             .GroupBy(failure => failure.PropertyName)
@@ -69,13 +76,13 @@ public class ExceptionHandlingMiddleware : IMiddleware
             Instance = context.Request.Path
         };
 
-        AddCorrelationId(context, problem);
+        AddCorrelationId(problem, correlationId);
         return problem;
     }
 
-    private static ProblemDetails BuildUnexpectedProblem(HttpContext context)
+    private static ProblemDetails BuildUnexpectedProblem(HttpContext context, string? correlationId)
     {
-        // No detail / stack trace leaked to the caller.
+        // Generic, safe message only — the real detail/stack trace stays in the log.
         var problem = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
@@ -84,27 +91,27 @@ public class ExceptionHandlingMiddleware : IMiddleware
             Instance = context.Request.Path
         };
 
-        AddCorrelationId(context, problem);
+        AddCorrelationId(problem, correlationId);
         return problem;
     }
 
-    private static void AddCorrelationId(HttpContext context, ProblemDetails problem)
+    private static void AddCorrelationId(ProblemDetails problem, string? correlationId)
     {
-        var correlationId = GetCorrelationId(context);
         if (correlationId is not null)
         {
             problem.Extensions["correlationId"] = correlationId;
         }
     }
 
+    // Read the correlation id from the X-Correlation-ID response header set upstream
+    // by the correlation id middleware, so the error response and the logs share it.
     private static string? GetCorrelationId(HttpContext context)
     {
-        return context.Items.TryGetValue(CorrelationIdMiddleware.ItemsKey, out var value) && value is string correlationId
-            ? correlationId
-            : null;
+        var value = context.Response.Headers[CorrelationIdMiddleware.HeaderName].ToString();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
-    private static async Task WriteProblemAsync(HttpContext context, ProblemDetails problem)
+    private static async Task WriteProblemAsync(HttpContext context, ProblemDetails problem, string? correlationId)
     {
         if (context.Response.HasStarted)
         {
@@ -118,7 +125,6 @@ public class ExceptionHandlingMiddleware : IMiddleware
 
         // Response.Clear() dropped the header set by the correlation middleware — re-apply it
         // so error responses still carry X-Correlation-ID.
-        var correlationId = GetCorrelationId(context);
         if (correlationId is not null)
         {
             context.Response.Headers[CorrelationIdMiddleware.HeaderName] = correlationId;
