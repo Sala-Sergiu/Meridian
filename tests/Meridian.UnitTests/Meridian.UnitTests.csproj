@@ -25,6 +25,8 @@
     <ProjectReference Include="..\..\src\Meridian.Bll\Meridian.Bll.csproj" />
     <ProjectReference Include="..\..\src\Meridian.Domain\Meridian.Domain.csproj" />
     <ProjectReference Include="..\..\src\Meridian.Api\Meridian.Api.csproj" />
+    <!-- Test-only reference: exercises the Dal caching decorator. -->
+    <ProjectReference Include="..\..\src\Meridian.Dal\Meridian.Dal.csproj" />
   </ItemGroup>
 
 </Project>
