@@ -1,4 +1,6 @@
 using Mapster;
+using Meridian.Bll.Dtos;
+using Meridian.Domain.Entities;
 
 namespace Meridian.Bll.Mapping;
 
@@ -7,6 +9,7 @@ public class MappingConfig : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        // TODO: register entity <-> DTO mappings per spec.
+        config.NewConfig<User, UserDto>()
+            .Map(dest => dest.Role, src => src.Role.ToString());
     }
 }
