@@ -20,14 +20,9 @@ builder.Services
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 // Middleware order: correlation id -> request logging -> exception handler ->
-// authentication -> authorization -> endpoints.
+// authentication -> authorization -> endpoints. Correlation id is first so every
+// response (Swagger included) and every log line carries it.
 app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseSerilogRequestLogging(options =>
@@ -43,6 +38,12 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
