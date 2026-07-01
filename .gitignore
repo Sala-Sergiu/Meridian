@@ -1,0 +1,19 @@
+## .NET build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+## Local config / secrets
+appsettings.*.local.json
+*.env
