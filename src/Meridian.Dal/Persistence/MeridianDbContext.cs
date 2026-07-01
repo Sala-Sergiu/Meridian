@@ -13,6 +13,10 @@ public class MeridianDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<OnboardingTemplate> OnboardingTemplates => Set<OnboardingTemplate>();
+
+    public DbSet<TemplateCard> TemplateCards => Set<TemplateCard>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeridianDbContext).Assembly);

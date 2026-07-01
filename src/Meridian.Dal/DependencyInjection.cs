@@ -19,6 +19,7 @@ public static class DependencyInjection
                 sql => sql.MigrationsAssembly(typeof(MeridianDbContext).Assembly.FullName)));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IOnboardingTemplateRepository, OnboardingTemplateRepository>();
 
         return services;
     }
