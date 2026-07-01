@@ -1,3 +1,4 @@
+using Meridian.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Dal.Persistence;
@@ -10,10 +11,10 @@ public class MeridianDbContext : DbContext
     {
     }
 
-    // DbSet<T> properties to be added per spec.
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // TODO: apply IEntityTypeConfiguration<T> from this assembly and HasData seed (idempotent by key).
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeridianDbContext).Assembly);
     }
 }

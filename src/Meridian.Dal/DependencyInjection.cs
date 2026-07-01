@@ -1,3 +1,7 @@
+using Meridian.Dal.Persistence;
+using Meridian.Dal.Repositories;
+using Meridian.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,8 +13,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDal(this IServiceCollection services, IConfiguration configuration)
     {
-        // TODO: register MeridianDbContext (SqlServer), repositories,
-        // and Scrutor caching decorators per spec.
+        services.AddDbContext<MeridianDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("Default"),
+                sql => sql.MigrationsAssembly(typeof(MeridianDbContext).Assembly.FullName)));
+
+        services.AddScoped<IUserRepository, UserRepository>();
+
         return services;
     }
 }
