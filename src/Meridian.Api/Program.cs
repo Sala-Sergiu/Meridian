@@ -65,6 +65,7 @@ builder.Services.AddAuthorizationBuilder()
         .AddRequirements(new BoardOwnerRequirement()));
 
 builder.Services.AddTransient<CorrelationIdMiddleware>();
+builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 
@@ -113,6 +114,9 @@ app.UseSerilogRequestLogging(options =>
         }
     };
 });
+
+// Catch-all: turns any unhandled exception into an RFC 7807 ProblemDetails.
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
