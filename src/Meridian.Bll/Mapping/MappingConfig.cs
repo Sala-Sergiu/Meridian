@@ -11,5 +11,8 @@ public class MappingConfig : IRegister
     {
         config.NewConfig<User, UserDto>()
             .Map(dest => dest.Role, src => src.Role.ToString());
+
+        config.NewConfig<TemplateCard, TemplateCardDto>()
+            .Map(dest => dest.Type, src => src.Type.ToString());
     }
 }

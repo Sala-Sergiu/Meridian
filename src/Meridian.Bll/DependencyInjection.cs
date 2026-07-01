@@ -13,6 +13,7 @@ public static class DependencyInjection
     public static IServiceCollection AddBll(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IOnboardingTemplateService, OnboardingTemplateService>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
