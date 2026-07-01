@@ -1,3 +1,4 @@
+using Meridian.Dal.Decorators;
 using Meridian.Dal.Persistence;
 using Meridian.Dal.Repositories;
 using Meridian.Domain.Repositories;
@@ -20,6 +21,11 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOnboardingTemplateRepository, OnboardingTemplateRepository>();
+
+        // Cache decoration (Scrutor) on the template hot path only — see
+        // CachedOnboardingTemplateRepository for the justification.
+        services.AddMemoryCache();
+        services.Decorate<IOnboardingTemplateRepository, CachedOnboardingTemplateRepository>();
 
         return services;
     }
