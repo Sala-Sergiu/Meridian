@@ -14,6 +14,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IOnboardingTemplateService, OnboardingTemplateService>();
+        services.AddScoped<IOnboardingBoardService, OnboardingBoardService>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();

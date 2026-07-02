@@ -14,5 +14,9 @@ public class MappingConfig : IRegister
 
         config.NewConfig<TemplateCard, TemplateCardDto>()
             .Map(dest => dest.Type, src => src.Type.ToString());
+
+        config.NewConfig<BoardCard, BoardCardDto>()
+            .Map(dest => dest.Type, src => src.Type.ToString())
+            .Map(dest => dest.Status, src => src.Status.ToString());
     }
 }
