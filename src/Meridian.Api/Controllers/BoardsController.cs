@@ -46,22 +46,26 @@ public class BoardsController : ControllerBase
             : CreatedAtAction(nameof(GetBoard), new { hireUserId = request.HireUserId }, result.Board);
     }
 
-    // The authenticated hire's own board. The hire id comes from the JWT sub
-    // claim — never from a route or query parameter.
+    // The authenticated hire's own board cards, filtered/sorted/paged through
+    // the query pipeline. The hire id comes from the JWT sub claim — never
+    // from a route or query parameter.
     [HttpGet("me")]
     [Authorize(Policy = Policies.CanRead)]
-    [ProducesResponseType(typeof(OnboardingBoardDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<BoardCardDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<OnboardingBoardDto>> GetMyBoard(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<BoardCardDto>>> GetMyBoard(
+        [FromQuery] BoardCardsQueryDto query,
+        CancellationToken cancellationToken)
     {
         if (!int.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, out var hireUserId))
         {
             return Unauthorized();
         }
 
-        var board = await _boards.GetMyBoardAsync(hireUserId, cancellationToken);
-        return board is null ? NotFound() : Ok(board);
+        var page = await _boards.GetMyBoardCardsAsync(hireUserId, query, cancellationToken);
+        return page is null ? NotFound() : Ok(page);
     }
 
     // HR/Manager progress view over any hire's board. A NewHire never satisfies
