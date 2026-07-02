@@ -1,5 +1,6 @@
 using Mapster;
 using Meridian.Bll.Dtos;
+using Meridian.Bll.QueryPipeline;
 using Meridian.Domain.Entities;
 using Meridian.Domain.Enums;
 using Meridian.Domain.Repositories;
@@ -78,5 +79,28 @@ public class OnboardingBoardService : IOnboardingBoardService
     {
         var board = await _boards.GetByHireIdAsync(hireUserId, cancellationToken);
         return board?.Adapt<OnboardingBoardDto>();
+    }
+
+    public async Task<PagedResult<BoardCardDto>?> GetMyBoardCardsAsync(
+        int hireUserId,
+        BoardCardsQueryDto query,
+        CancellationToken cancellationToken = default)
+    {
+        // Bll composes the steps and passes them in; Dal applies and
+        // materializes — IQueryable never crosses this boundary.
+        var steps = BoardCardsPipeline.Compose(query);
+        var page = await _boards.GetBoardCardsAsync(hireUserId, steps, cancellationToken);
+        if (page is null)
+        {
+            return null;
+        }
+
+        return new PagedResult<BoardCardDto>
+        {
+            Items = page.Items.Adapt<List<BoardCardDto>>(),
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalCount = page.TotalCount
+        };
     }
 }

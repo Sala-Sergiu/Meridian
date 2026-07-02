@@ -1,4 +1,5 @@
 using Meridian.Dal.Persistence;
+using Meridian.Domain.Common;
 using Meridian.Domain.Entities;
 using Meridian.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -43,5 +44,42 @@ public class OnboardingBoardRepository : RepositoryBase<OnboardingBoard>, IOnboa
     {
         Context.Set<OnboardingBoard>().Add(board);
         await Context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<PagedItems<BoardCard>?> GetBoardCardsAsync(
+        int hireUserId,
+        IReadOnlyList<IQueryStep<BoardCard>> steps,
+        CancellationToken cancellationToken = default)
+    {
+        var boardId = await Context.Set<OnboardingBoard>()
+            .AsNoTracking()
+            .Where(b => b.HireUserId == hireUserId)
+            .Select(b => (int?)b.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (boardId is null)
+        {
+            return null;
+        }
+
+        var query = Context.Set<BoardCard>()
+            .AsNoTracking()
+            .Where(c => c.BoardId == boardId);
+
+        foreach (var step in steps.Where(s => s is not IPagingStep<BoardCard>))
+        {
+            query = step.Apply(query);
+        }
+
+        // Count before paging so the total reflects the filtered-but-unpaged set.
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        foreach (var step in steps.OfType<IPagingStep<BoardCard>>())
+        {
+            query = step.Apply(query);
+        }
+
+        var items = await query.ToListAsync(cancellationToken);
+        return new PagedItems<BoardCard>(items, totalCount);
     }
 }

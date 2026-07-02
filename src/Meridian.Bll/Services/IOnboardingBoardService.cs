@@ -14,4 +14,11 @@ public interface IOnboardingBoardService
     // The hire's own board (or any hire's board when called by HR/Manager —
     // authorization happens at the API layer). Null when no board is assigned.
     Task<OnboardingBoardDto?> GetMyBoardAsync(int hireUserId, CancellationToken cancellationToken = default);
+
+    // The hire's board cards filtered/sorted/paged through the query pipeline.
+    // Null when the hire has no board (as opposed to an empty page).
+    Task<PagedResult<BoardCardDto>?> GetMyBoardCardsAsync(
+        int hireUserId,
+        BoardCardsQueryDto query,
+        CancellationToken cancellationToken = default);
 }
