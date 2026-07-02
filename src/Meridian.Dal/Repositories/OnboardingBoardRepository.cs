@@ -46,6 +46,14 @@ public class OnboardingBoardRepository : RepositoryBase<OnboardingBoard>, IOnboa
         await Context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task UpdateCardAsync(BoardCard card, CancellationToken cancellationToken = default)
+    {
+        // Cards are read untracked (AsNoTracking), so attach-and-mark-modified
+        // before saving. DbContext is the unit of work.
+        Context.Set<BoardCard>().Update(card);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<PagedItems<BoardCard>?> GetBoardCardsAsync(
         int hireUserId,
         IReadOnlyList<IQueryStep<BoardCard>> steps,

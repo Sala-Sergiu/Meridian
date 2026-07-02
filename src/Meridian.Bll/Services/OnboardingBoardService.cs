@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.Results;
 using Mapster;
 using Meridian.Bll.Dtos;
 using Meridian.Bll.QueryPipeline;
@@ -79,6 +81,40 @@ public class OnboardingBoardService : IOnboardingBoardService
     {
         var board = await _boards.GetByHireIdAsync(hireUserId, cancellationToken);
         return board?.Adapt<OnboardingBoardDto>();
+    }
+
+    public async Task<BoardCardDto?> MoveCardAsync(
+        int hireUserId,
+        int cardId,
+        MoveCardRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        // Defense in depth: the API validator already rejected bad values, but
+        // this use-case must hold on its own for any future caller.
+        if (!Enum.TryParse<CardStatus>(request.Status, ignoreCase: true, out var newStatus))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure(
+                    nameof(request.Status),
+                    $"Status must be one of: {string.Join(", ", Enum.GetNames<CardStatus>())}.")
+            });
+        }
+
+        // Ownership by construction: only the caller's own board is loaded, so
+        // a card on another hire's board is indistinguishable from a card that
+        // does not exist — both return null (404), never revealing existence.
+        var board = await _boards.GetByHireIdAsync(hireUserId, cancellationToken);
+        var card = board?.Cards.FirstOrDefault(c => c.Id == cardId);
+        if (card is null)
+        {
+            return null;
+        }
+
+        card.Status = newStatus;
+        await _boards.UpdateCardAsync(card, cancellationToken);
+
+        return card.Adapt<BoardCardDto>();
     }
 
     public async Task<PagedResult<BoardCardDto>?> GetMyBoardCardsAsync(

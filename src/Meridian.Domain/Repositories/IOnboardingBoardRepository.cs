@@ -14,6 +14,10 @@ public interface IOnboardingBoardRepository : IRepository<OnboardingBoard>
     // Persists immediately — the DbContext is the unit of work.
     Task AddAsync(OnboardingBoard board, CancellationToken cancellationToken = default);
 
+    // Persists changes to an existing board card immediately — the DbContext
+    // is the unit of work; no IUnitOfWork.
+    Task UpdateCardAsync(BoardCard card, CancellationToken cancellationToken = default);
+
     // Runs the composed query pipeline over the hire's board cards and returns
     // materialized results — IQueryable never escapes Dal. TotalCount is
     // computed before any IPagingStep is applied. Null when the hire has no

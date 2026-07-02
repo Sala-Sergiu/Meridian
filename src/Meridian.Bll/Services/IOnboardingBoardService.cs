@@ -21,4 +21,15 @@ public interface IOnboardingBoardService
         int hireUserId,
         BoardCardsQueryDto query,
         CancellationToken cancellationToken = default);
+
+    // Moves a card on the hire's OWN board to a new status. Ownership is
+    // checked here in the business layer: the card must sit on the caller's
+    // board. Null means "no such card on your board" — deliberately the same
+    // answer for a missing card and for a card on another hire's board, so
+    // the API never reveals whether a foreign card id exists.
+    Task<BoardCardDto?> MoveCardAsync(
+        int hireUserId,
+        int cardId,
+        MoveCardRequestDto request,
+        CancellationToken cancellationToken = default);
 }
