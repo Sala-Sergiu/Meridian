@@ -1,3 +1,4 @@
+using FluentValidation;
 using Mapster;
 using Meridian.Bll.Dtos;
 using Meridian.Bll.Mapping;
@@ -223,5 +224,76 @@ public class OnboardingBoardServiceTests
         var result = await _sut.GetMyBoardCardsAsync(42, new BoardCardsQueryDto());
 
         Assert.Null(result);
+    }
+
+    private static OnboardingBoard BoardWithCard(int hireUserId, int cardId, CardStatus status = CardStatus.ToDo) => new()
+    {
+        Id = 7,
+        HireUserId = hireUserId,
+        Cards = new List<BoardCard>
+        {
+            new() { Id = cardId, BoardId = 7, Title = "Handbook", Description = "d", Type = CardType.Resource, Status = status, Order = 1 }
+        }
+    };
+
+    [Fact]
+    public async Task MoveCardAsync_OwnerMovesOwnCard_UpdatesStatus_AndReturnsDto()
+    {
+        _boards.GetByHireIdAsync(42, Arg.Any<CancellationToken>()).Returns(BoardWithCard(42, cardId: 5));
+
+        var result = await _sut.MoveCardAsync(42, 5, new MoveCardRequestDto { Status = "InProgress" });
+
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.Id);
+        Assert.Equal("InProgress", result.Status);
+
+        await _boards.Received(1).UpdateCardAsync(
+            Arg.Is<BoardCard>(c => c.Id == 5 && c.Status == CardStatus.InProgress),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task MoveCardAsync_CardOnAnotherHiresBoard_ReturnsNull_PersistsNothing()
+    {
+        // Card 99 lives on another hire's board — the caller's own board does
+        // not contain it, which must be indistinguishable from "no such card".
+        _boards.GetByHireIdAsync(42, Arg.Any<CancellationToken>()).Returns(BoardWithCard(42, cardId: 5));
+
+        var result = await _sut.MoveCardAsync(42, 99, new MoveCardRequestDto { Status = "Done" });
+
+        Assert.Null(result);
+        await _boards.DidNotReceive().UpdateCardAsync(Arg.Any<BoardCard>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task MoveCardAsync_WhenCallerHasNoBoard_ReturnsNull_PersistsNothing()
+    {
+        _boards.GetByHireIdAsync(2, Arg.Any<CancellationToken>()).Returns((OnboardingBoard?)null);
+
+        var result = await _sut.MoveCardAsync(2, 5, new MoveCardRequestDto { Status = "Done" });
+
+        Assert.Null(result);
+        await _boards.DidNotReceive().UpdateCardAsync(Arg.Any<BoardCard>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task MoveCardAsync_InvalidStatus_ThrowsValidationException_PersistsNothing()
+    {
+        _boards.GetByHireIdAsync(42, Arg.Any<CancellationToken>()).Returns(BoardWithCard(42, cardId: 5));
+
+        await Assert.ThrowsAsync<ValidationException>(
+            () => _sut.MoveCardAsync(42, 5, new MoveCardRequestDto { Status = "Shipped" }));
+
+        await _boards.DidNotReceive().UpdateCardAsync(Arg.Any<BoardCard>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task MoveCardAsync_StatusIsCaseInsensitive()
+    {
+        _boards.GetByHireIdAsync(42, Arg.Any<CancellationToken>()).Returns(BoardWithCard(42, cardId: 5));
+
+        var result = await _sut.MoveCardAsync(42, 5, new MoveCardRequestDto { Status = "done" });
+
+        Assert.Equal("Done", result!.Status);
     }
 }
