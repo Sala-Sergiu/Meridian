@@ -18,6 +18,21 @@ builder.Services
     .AddBll()
     .AddApiServices(builder.Configuration);
 
+// Dev-only CORS for the Angular dev server (ng serve). Allows the bearer
+// Authorization and X-Correlation-ID request headers and exposes the
+// correlation id on responses so the frontend can read it. Production serves
+// the client from the same origin (or gets its own explicit policy) — this
+// policy is registered and applied in Development only.
+const string devCorsPolicy = "DevClient";
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options => options.AddPolicy(devCorsPolicy, policy => policy
+        .WithOrigins("http://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .WithExposedHeaders(CorrelationIdMiddleware.HeaderName)));
+}
+
 var app = builder.Build();
 
 // Middleware order: correlation id -> request logging -> exception handler ->
@@ -41,6 +56,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors(devCorsPolicy);
     app.UseSwagger();
     app.UseSwaggerUI();
 }
