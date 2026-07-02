@@ -17,6 +17,10 @@ public class MeridianDbContext : DbContext
 
     public DbSet<TemplateCard> TemplateCards => Set<TemplateCard>();
 
+    public DbSet<OnboardingBoard> OnboardingBoards => Set<OnboardingBoard>();
+
+    public DbSet<BoardCard> BoardCards => Set<BoardCard>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeridianDbContext).Assembly);

@@ -21,6 +21,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOnboardingTemplateRepository, OnboardingTemplateRepository>();
+        services.AddScoped<IOnboardingBoardRepository, OnboardingBoardRepository>();
 
         // Cache decoration (Scrutor) on the template hot path only — see
         // CachedOnboardingTemplateRepository for the justification.
