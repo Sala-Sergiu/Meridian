@@ -1,3 +1,5 @@
+using Meridian.Domain.Common;
+
 namespace Meridian.Bll.QueryPipeline.Steps;
 
 // Sorting step (OrderBy / OrderByDescending). Standard LINQ only.

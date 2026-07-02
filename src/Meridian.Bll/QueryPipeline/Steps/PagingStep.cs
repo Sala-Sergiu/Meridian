@@ -1,3 +1,5 @@
+using Meridian.Domain.Common;
+
 namespace Meridian.Bll.QueryPipeline.Steps;
 
 // Paging step (Skip / Take). Standard LINQ only.
