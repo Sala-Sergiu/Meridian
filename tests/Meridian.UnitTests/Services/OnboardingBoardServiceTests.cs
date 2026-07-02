@@ -1,6 +1,8 @@
 using Mapster;
+using Meridian.Bll.Dtos;
 using Meridian.Bll.Mapping;
 using Meridian.Bll.Services;
+using Meridian.Domain.Common;
 using Meridian.Domain.Entities;
 using Meridian.Domain.Enums;
 using Meridian.Domain.Repositories;
@@ -180,6 +182,45 @@ public class OnboardingBoardServiceTests
         _boards.GetByHireIdAsync(42, Arg.Any<CancellationToken>()).Returns((OnboardingBoard?)null);
 
         var result = await _sut.GetMyBoardAsync(42);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetMyBoardCardsAsync_PassesComposedStepsIn_AndMapsPagedResult()
+    {
+        var cards = new List<BoardCard>
+        {
+            new() { Id = 1, Title = "Handbook", Description = "d", Type = CardType.Resource, Status = CardStatus.ToDo, Order = 1 }
+        };
+        _boards.GetBoardCardsAsync(42, Arg.Any<IReadOnlyList<IQueryStep<BoardCard>>>(), Arg.Any<CancellationToken>())
+            .Returns(new PagedItems<BoardCard>(cards, TotalCount: 7));
+
+        var result = await _sut.GetMyBoardCardsAsync(42, new BoardCardsQueryDto { Page = 2, PageSize = 5 });
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Page);
+        Assert.Equal(5, result.PageSize);
+        Assert.Equal(7, result.TotalCount);
+        Assert.Equal(2, result.TotalPages);
+
+        var card = Assert.Single(result.Items);
+        Assert.Equal("Handbook", card.Title);
+        Assert.Equal("ToDo", card.Status);
+
+        await _boards.Received(1).GetBoardCardsAsync(
+            42,
+            Arg.Is<IReadOnlyList<IQueryStep<BoardCard>>>(steps => steps.Count == 2),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetMyBoardCardsAsync_WhenNoBoardAssigned_ReturnsNull()
+    {
+        _boards.GetBoardCardsAsync(42, Arg.Any<IReadOnlyList<IQueryStep<BoardCard>>>(), Arg.Any<CancellationToken>())
+            .Returns((PagedItems<BoardCard>?)null);
+
+        var result = await _sut.GetMyBoardCardsAsync(42, new BoardCardsQueryDto());
 
         Assert.Null(result);
     }
