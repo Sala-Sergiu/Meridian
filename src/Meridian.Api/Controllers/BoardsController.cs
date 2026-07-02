@@ -68,6 +68,32 @@ public class BoardsController : ControllerBase
         return page is null ? NotFound() : Ok(page);
     }
 
+    // The hire moves one of their OWN cards between columns — the only write
+    // on the board. BoardOwnerWrite rejects read-only roles (HR/Manager) with
+    // 403 at the authorization layer; the business layer then only ever
+    // touches the caller's own board (id from the JWT sub claim, never from a
+    // parameter), so a foreign or missing card is a plain 404.
+    [HttpPatch("me/cards/{cardId:int}")]
+    [Authorize(Policy = Policies.BoardOwnerWrite)]
+    [ProducesResponseType(typeof(BoardCardDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BoardCardDto>> MoveCard(
+        int cardId,
+        MoveCardRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!int.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, out var hireUserId))
+        {
+            return Unauthorized();
+        }
+
+        var card = await _boards.MoveCardAsync(hireUserId, cardId, request, cancellationToken);
+        return card is null ? NotFound() : Ok(card);
+    }
+
     // HR/Manager progress view over any hire's board. A NewHire never satisfies
     // this policy, so they cannot read another hire's board through this route.
     [HttpGet("{hireUserId:int}")]

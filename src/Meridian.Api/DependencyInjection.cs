@@ -66,6 +66,7 @@ public static class DependencyInjection
     {
         // Resource/role aware policies (not flat role gates).
         services.AddScoped<IAuthorizationHandler, BoardOwnerAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, BoardOwnerEndpointHandler>();
         services.AddAuthorizationBuilder()
             .AddPolicy(Policies.CanRead, policy => policy.RequireAuthenticatedUser())
             .AddPolicy(Policies.HrWrite, policy => policy
