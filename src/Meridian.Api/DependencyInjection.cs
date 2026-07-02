@@ -71,6 +71,9 @@ public static class DependencyInjection
             .AddPolicy(Policies.HrWrite, policy => policy
                 .RequireAuthenticatedUser()
                 .RequireRole(nameof(Role.HR)))
+            .AddPolicy(Policies.HrOrManagerRead, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireRole(nameof(Role.HR), nameof(Role.Manager)))
             .AddPolicy(Policies.BoardOwnerWrite, policy => policy
                 .RequireAuthenticatedUser()
                 .AddRequirements(new BoardOwnerRequirement()));
