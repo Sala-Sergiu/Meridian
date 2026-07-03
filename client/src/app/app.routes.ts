@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 
-// Routing shell: placeholder routes only, wired so later slices drop real
-// screens in without touching the shell. Lazy-loaded standalone components.
+// /login is public; everything product-facing is guarded. The board itself is
+// still a placeholder — the real screen lands in a later slice. Lazy-loaded
+// standalone components.
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'board' },
   {
@@ -10,6 +12,7 @@ export const routes: Routes = [
   },
   {
     path: 'board',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/board/board-page').then((m) => m.BoardPage),
   },
   { path: '**', redirectTo: 'board' },
