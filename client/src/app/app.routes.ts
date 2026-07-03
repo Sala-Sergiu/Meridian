@@ -8,10 +8,12 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'board' },
   {
     path: 'login',
+    title: 'Sign in · Meridian',
     loadComponent: () => import('./features/login/login-page').then((m) => m.LoginPage),
   },
   {
     path: 'board',
+    title: 'My onboarding · Meridian',
     canActivate: [authGuard],
     loadComponent: () => import('./features/board/board-page').then((m) => m.BoardPage),
   },
