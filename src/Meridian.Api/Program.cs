@@ -2,6 +2,7 @@ using Meridian.Api;
 using Meridian.Api.Middleware;
 using Meridian.Bll;
 using Meridian.Dal;
+using Meridian.Dal.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,13 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+// Containerized runs (docker compose) apply migrations + HasData seed here;
+// local dev applies them explicitly via `dotnet ef database update`.
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsAtStartup"))
+{
+    await DatabaseInitializer.ApplyMigrationsAsync(app.Services);
+}
 
 // Middleware order: correlation id -> request logging -> exception handler ->
 // authentication -> authorization -> endpoints. Correlation id is first so every
