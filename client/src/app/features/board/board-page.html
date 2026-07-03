@@ -1,18 +1,45 @@
 <section class="board">
   <h2>My onboarding</h2>
 
-  <div class="kanban">
-    @for (column of columns(); track column.status) {
-      <div class="column">
-        <h3>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h3>
-
-        @for (card of column.cards; track card.id) {
-          <article class="card">
-            <h4>{{ card.title }}</h4>
-            <p>{{ card.description }}</p>
-          </article>
-        }
-      </div>
+  @if (loading()) {
+    <p class="state">Loading your board…</p>
+  } @else if (error(); as problem) {
+    <div class="state error" role="alert">
+      <p>{{ problem.message }}</p>
+      @if (problem.correlationId; as correlationId) {
+        <p class="correlation">
+          If this keeps happening, mention this id to support: <code>{{ correlationId }}</code>
+        </p>
+      }
+    </div>
+  } @else {
+    @if (noBoard()) {
+      <p class="state">No onboarding board has been assigned to you yet — check back soon.</p>
     }
-  </div>
+
+    <div class="kanban">
+      @for (column of columns(); track column.status) {
+        <div class="column">
+          <h3>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h3>
+
+          @for (card of column.cards; track card.id) {
+            <article class="card">
+              <div class="card-top">
+                <h4>{{ card.title }}</h4>
+                <span [class]="'badge type-' + card.type.toLowerCase()">
+                  {{ card.type }}
+                </span>
+              </div>
+              <p>{{ card.description }}</p>
+              @if (card.url; as url) {
+                <a [href]="url" target="_blank" rel="noopener">Open link ↗</a>
+              }
+            </article>
+          } @empty {
+            <p class="empty">Nothing here yet</p>
+          }
+        </div>
+      }
+    </div>
+  }
 </section>

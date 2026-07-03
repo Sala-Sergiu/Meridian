@@ -80,8 +80,60 @@ describe('BoardPage', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('No onboarding board has been assigned to you yet');
     expect(element.querySelectorAll('.column').length).toBe(3);
     expect(element.querySelectorAll('.card').length).toBe(0);
+    expect(element.querySelector('.error')).toBeNull();
   });
 
+  it('shows a loading state until the board arrives', () => {
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Loading your board');
+
+    flushBoard(controller, []);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Loading your board');
+  });
+
+  it('renders a color-coded type badge and a safe external link per card', () => {
+    flushBoard(controller, [
+      card({ id: 1, type: 'Safety', url: 'https://intranet.local/evacuation' }),
+    ]);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const badge = element.querySelector('.type-safety');
+    expect(badge?.textContent?.trim()).toBe('Safety');
+
+    const link = element.querySelector<HTMLAnchorElement>('.card a')!;
+    expect(link.href).toBe('https://intranet.local/evacuation');
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toBe('noopener');
+  });
+
+  it('shows a per-column empty state', () => {
+    flushBoard(controller, [card({ id: 1, status: 'ToDo' })]);
+    fixture.detectChanges();
+
+    const empties = (fixture.nativeElement as HTMLElement).querySelectorAll('.empty');
+    expect(empties.length).toBe(2);
+    expect(empties[0].textContent).toContain('Nothing here yet');
+  });
+
+  it('shows the correlation id from ProblemDetails when the request fails', () => {
+    controller.expectOne((r) => r.url === `${environment.apiBaseUrl}/boards/me`).flush(
+      {
+        type: 'https://httpstatuses.io/500',
+        title: 'An unexpected error occurred.',
+        status: 500,
+        correlationId: 'corr-123',
+      },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(text).toContain('Could not load your board.');
+    expect(text).toContain('corr-123');
+  });
 });
