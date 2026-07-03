@@ -3,7 +3,15 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
 import { AuthState } from './auth-state';
+import { LoginResult } from './auth.models';
 import { authInterceptor } from './auth.interceptor';
+
+function sessionWithToken(token: string): LoginResult {
+  return {
+    token,
+    user: { id: 1, email: 'newhire@meridian.local', displayName: 'Nadia NewHire', role: 'NewHire' },
+  };
+}
 
 describe('authInterceptor', () => {
   let http: HttpClient;
@@ -11,6 +19,7 @@ describe('authInterceptor', () => {
   let auth: AuthState;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
@@ -22,10 +31,13 @@ describe('authInterceptor', () => {
     auth = TestBed.inject(AuthState);
   });
 
-  afterEach(() => controller.verify());
+  afterEach(() => {
+    controller.verify();
+    localStorage.clear();
+  });
 
   it('attaches a bearer token to API requests when a token is present', () => {
-    auth.setToken('jwt-123');
+    auth.setSession(sessionWithToken('jwt-123'));
 
     http.get(`${environment.apiBaseUrl}/users/me`).subscribe();
 
@@ -43,7 +55,7 @@ describe('authInterceptor', () => {
   });
 
   it('never attaches the token to non-API requests', () => {
-    auth.setToken('jwt-123');
+    auth.setSession(sessionWithToken('jwt-123'));
 
     http.get('https://example.com/other').subscribe();
 
