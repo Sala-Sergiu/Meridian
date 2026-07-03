@@ -125,4 +125,21 @@ describe('ResourcePage', () => {
     expect(element.querySelector('h2')?.textContent).toBe('Resource not found');
     expect(element.querySelector('a.back')).not.toBeNull();
   });
+
+  it('renders a published article from the board card when no static content exists', async () => {
+    const element = await render('gdpr-refresher', [
+      card({
+        id: 9,
+        url: '/resources/gdpr-refresher',
+        type: 'Safety',
+        title: 'GDPR refresher',
+        description: 'Annual privacy training.',
+        status: 'ToDo',
+      }),
+    ]);
+
+    expect(element.querySelector('h2')?.textContent).toBe('GDPR refresher');
+    expect(element.textContent).toContain('Annual privacy training.');
+    expect(element.querySelector('.acknowledge button')?.textContent).toContain('Mark as read');
+  });
 });

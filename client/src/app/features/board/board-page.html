@@ -49,8 +49,17 @@
             </div>
             @if (card.status === 'Done') {
               <span class="read-state">✓ Read</span>
-            } @else {
+            } @else if (hasArticle(card)) {
               <span class="unread-state">Unread</span>
+            } @else {
+              <button
+                type="button"
+                class="mark-read"
+                (click)="markRead(card)"
+                [disabled]="pendingCardId() !== null"
+              >
+                Mark as read
+              </button>
             }
           </article>
         }

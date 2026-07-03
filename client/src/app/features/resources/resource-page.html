@@ -1,7 +1,7 @@
 <section class="resource">
   <a class="back" routerLink="/board">← Back to board</a>
 
-  @if (resource(); as content) {
+  @if (content(); as content) {
     <h2>{{ content.title }}</h2>
     <p class="intro">{{ content.intro }}</p>
 
@@ -26,7 +26,7 @@
         }
       </div>
     }
-  } @else {
+  } @else if (boardChecked()) {
     <h2>Resource not found</h2>
     <p class="intro">This page does not exist (yet). Head back to your board and pick a card from there.</p>
   }

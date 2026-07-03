@@ -21,10 +21,13 @@ export class ResourcePage implements OnInit {
   private readonly params = toSignal(inject(ActivatedRoute).paramMap);
 
   protected readonly saving = signal(false);
+  // Whether the board request has settled — before that, an unknown slug is
+  // "still loading", not "not found" (the card may yet provide the content).
+  protected readonly boardChecked = signal(false);
   private readonly boardCards = signal<BoardCard[]>([]);
   private readonly startedCardIds = new Set<number>();
 
-  protected readonly resource = computed<ResourceContent | null>(() => {
+  private readonly resource = computed<ResourceContent | null>(() => {
     const slug = this.params()?.get('slug');
     return slug ? (RESOURCE_CONTENT[slug] ?? null) : null;
   });
@@ -34,6 +37,19 @@ export class ResourcePage implements OnInit {
   protected readonly card = computed<BoardCard | null>(() => {
     const slug = this.params()?.get('slug');
     return this.boardCards().find((c) => c.url === `/resources/${slug}`) ?? null;
+  });
+
+  // What the page renders: the static article when one exists, otherwise the
+  // board card itself (title + description). HR-published cards have no static
+  // content, so without this fallback they could never be acknowledged.
+  protected readonly content = computed<ResourceContent | null>(() => {
+    const staticContent = this.resource();
+    if (staticContent !== null) {
+      return staticContent;
+    }
+
+    const card = this.card();
+    return card === null ? null : { title: card.title, intro: card.description, sections: [] };
   });
 
   // Only required reading (Safety) and tasks (Resource) are acknowledged;
@@ -57,11 +73,15 @@ export class ResourcePage implements OnInit {
     this.boardService.getMyBoard().subscribe({
       next: (page) => {
         this.boardCards.set(page.items);
+        this.boardChecked.set(true);
         this.autoStart();
       },
       // No board (404) or any failure: the article still renders, just
       // without the acknowledgment flow.
-      error: () => this.boardCards.set([]),
+      error: () => {
+        this.boardCards.set([]);
+        this.boardChecked.set(true);
+      },
     });
   }
 

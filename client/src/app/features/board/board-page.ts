@@ -85,6 +85,21 @@ export class BoardPage implements OnInit {
     this.moveError.set(null);
   }
 
+  // Whether the card links to an in-app article — only there can it be
+  // acknowledged. Published cards without one (no url, or an external url)
+  // must be markable from the board itself, or they would stay unread forever.
+  protected hasArticle(card: BoardCard): boolean {
+    return (card.url ?? '').startsWith('/');
+  }
+
+  protected markRead(card: BoardCard): void {
+    if (this.pendingCardId() !== null) {
+      return;
+    }
+
+    this.move(card, 'Done');
+  }
+
   // Dropping into the same column is a no-op (cards keep their template
   // order); dropping into another column moves the card there.
   protected onDrop(event: CdkDragDrop<CardStatus>): void {

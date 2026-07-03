@@ -91,17 +91,40 @@ describe('BoardPage', () => {
 
   it('shows read/unread state on attention items without any board-side button', () => {
     flushBoard(controller, [
-      card({ id: 5, type: 'Safety', title: 'Safety rules', status: 'ToDo' }),
-      card({ id: 6, type: 'Safety', title: 'Confidentiality', status: 'Done' }),
+      card({ id: 5, type: 'Safety', title: 'Safety rules', status: 'ToDo', url: '/resources/safety-basics' }),
+      card({ id: 6, type: 'Safety', title: 'Confidentiality', status: 'Done', url: '/resources/data-confidentiality' }),
     ]);
     fixture.detectChanges();
 
     const attention = element().querySelector('.attention')!;
-    // Acknowledgment happens inside the article, not from the board.
+    // Cards with an in-app article are acknowledged there, not from the board.
     expect(attention.querySelector('button')).toBeNull();
     expect(attention.querySelector('.unread-state')).not.toBeNull();
     expect(attention.querySelector('.read-state')?.textContent).toContain('✓ Read');
     expect(attention.textContent).toContain('1 of 2 read');
+  });
+
+  it('lets required reading without an in-app article be marked read on the board', () => {
+    flushBoard(controller, [
+      card({ id: 8, type: 'Safety', title: 'GDPR refresher', status: 'ToDo', url: null }),
+    ]);
+    fixture.detectChanges();
+
+    const button = element().querySelector<HTMLButtonElement>('.attention .mark-read')!;
+    expect(button.textContent).toContain('Mark as read');
+
+    button.click();
+    fixture.detectChanges();
+
+    const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/8`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'Done' });
+    req.flush(card({ id: 8, type: 'Safety', status: 'Done' }));
+    fixture.detectChanges();
+
+    const attention = element().querySelector('.attention')!;
+    expect(attention.querySelector('.mark-read')).toBeNull();
+    expect(attention.querySelector('.read-state')?.textContent).toContain('✓ Read');
   });
 
   it('renders contacts as reference info without any status control', () => {
