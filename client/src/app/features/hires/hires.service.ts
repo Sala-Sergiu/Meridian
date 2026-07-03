@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
-import { HireProgress, PublishCardRequest, PublishCardResult } from './hires.models';
+import { HireBoard, HireProgress, PublishCardRequest, PublishCardResult } from './hires.models';
 
 // HR/Manager tracking and HR publishing. Authorization lives in the backend
 // policies (HrOrManagerRead / HrWrite) — this service just calls.
@@ -14,6 +14,10 @@ export class HiresService {
 
   getProgress(): Observable<HireProgress[]> {
     return this.api.get<HireProgress[]>('boards/progress');
+  }
+
+  getBoard(hireUserId: number): Observable<HireBoard> {
+    return this.api.get<HireBoard>(`boards/${hireUserId}`);
   }
 
   assignBoard(hireUserId: number): Observable<unknown> {

@@ -24,6 +24,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/hires/hires-page').then((m) => m.HiresPage),
   },
   {
+    path: 'hires/:hireUserId',
+    title: 'Hire board · Meridian',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/hires/hire-board-page').then((m) => m.HireBoardPage),
+  },
+  {
     path: 'calendar',
     title: 'My calendar · Meridian',
     canActivate: [authGuard],

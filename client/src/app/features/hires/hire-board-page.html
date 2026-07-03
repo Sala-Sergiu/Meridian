@@ -1,0 +1,74 @@
+<section class="hire-board">
+  <p class="back"><a routerLink="/hires">← All hires</a></p>
+
+  @if (loading()) {
+    <app-loading message="Loading the board…" />
+  } @else if (error(); as problem) {
+    <app-error-banner [message]="problem.message" [correlationId]="problem.correlationId" />
+  } @else if (noBoard()) {
+    <h2>Onboarding</h2>
+    <p class="state">This hire has no onboarding board assigned yet.</p>
+  } @else {
+    <h2>{{ hire()?.displayName ?? 'Hire #' + hireUserId }} — onboarding</h2>
+    @if (hire(); as h) {
+      <p class="email">{{ h.email }}</p>
+    }
+
+    @if (allDone()) {
+      <p class="all-done">🎉 All set — everything read, every task finished.</p>
+    }
+
+    @if (attention().length > 0) {
+      <section class="attention">
+        <h3>
+          <span aria-hidden="true">⚠</span> Required reading
+          <span class="count">{{ attentionRead() }} of {{ attention().length }} read</span>
+        </h3>
+        @for (card of attention(); track card.id) {
+          <article class="attention-item">
+            <div class="attention-body">
+              <h4>{{ card.title }}</h4>
+              <p>{{ card.description }}</p>
+            </div>
+            @if (card.status === 'Done') {
+              <span class="read-state">✓ Read</span>
+            } @else {
+              <span class="unread-state">Unread</span>
+            }
+          </article>
+        }
+      </section>
+    }
+
+    <section class="tasks">
+      <div class="tasks-header">
+        <h3>Tasks</h3>
+        @if (tasksTotal() > 0) {
+          <div class="progress" role="status">
+            <span class="progress-label">{{ tasksDone() }} of {{ tasksTotal() }} done</span>
+            <span class="progress-track" aria-hidden="true">
+              <span class="progress-fill" [style.width.%]="(tasksDone() / tasksTotal()) * 100"></span>
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="kanban">
+        @for (column of columns(); track column.status) {
+          <div class="column">
+            <h4>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h4>
+
+            @for (card of column.cards; track card.id) {
+              <article class="card">
+                <h5>{{ card.title }}</h5>
+                <p>{{ card.description }}</p>
+              </article>
+            } @empty {
+              <p class="empty">Nothing here</p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -21,7 +21,11 @@
         @for (hire of hires(); track hire.hireUserId) {
           <tr>
             <td>
-              <span class="name">{{ hire.displayName }}</span>
+              @if (hire.hasBoard) {
+                <a class="name" [routerLink]="['/hires', hire.hireUserId]">{{ hire.displayName }}</a>
+              } @else {
+                <span class="name">{{ hire.displayName }}</span>
+              }
               <span class="email">{{ hire.email }}</span>
             </td>
             @if (hire.hasBoard) {

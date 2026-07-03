@@ -59,6 +59,17 @@ describe('HiresPage', () => {
     expect(row.textContent).toContain('Nadia');
     expect(row.textContent).toContain('2/2');
     expect(row.textContent).toContain('1/2');
+
+    // A hire with a board links through to their read-only board view.
+    const link = row.querySelector<HTMLAnchorElement>('a.name')!;
+    expect(link.getAttribute('href')).toBe('/hires/1');
+  });
+
+  it('does not link hires without a board', async () => {
+    const element = await render('HR', [hire({ hireUserId: 4, hasBoard: false })]);
+
+    expect(element.querySelector('tbody a.name')).toBeNull();
+    expect(element.querySelector('tbody .name')!.textContent).toContain('Hire 4');
   });
 
   it('shows the assign action to HR for hires without a board', async () => {

@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthState } from '../../core/auth/auth-state';
 import { ErrorBanner } from '../../shared/ui/error-banner';
 import { Loading } from '../../shared/ui/loading';
@@ -12,7 +13,7 @@ import { HiresService } from './hires.service';
 // HrWrite policy is the real enforcement (a Manager POST would get 403).
 @Component({
   selector: 'app-hires-page',
-  imports: [ErrorBanner, Loading, ReactiveFormsModule],
+  imports: [ErrorBanner, Loading, ReactiveFormsModule, RouterLink],
   templateUrl: './hires-page.html',
   styleUrl: './hires-page.scss',
 })
