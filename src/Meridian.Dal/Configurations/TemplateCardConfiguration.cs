@@ -30,7 +30,8 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "Workplace safety basics",
                 Description = "Required reading before your first day on site: evacuation routes, incident reporting and protective equipment.",
                 Type = CardType.Safety,
-                Url = "https://intranet.meridian.local/safety/basics",
+                // Relative urls are in-app resource pages rendered by the frontend.
+                Url = "/resources/safety-basics",
                 Order = 1
             },
             new TemplateCard
@@ -40,7 +41,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "Employee handbook",
                 Description = "Company policies, benefits and day-to-day practicalities.",
                 Type = CardType.Resource,
-                Url = "https://intranet.meridian.local/handbook",
+                Url = "/resources/employee-handbook",
                 Order = 2
             },
             new TemplateCard
@@ -50,7 +51,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "Development environment setup",
                 Description = "Step-by-step guide to get your workstation and accounts ready.",
                 Type = CardType.Resource,
-                Url = "https://intranet.meridian.local/it/dev-setup",
+                Url = "/resources/dev-setup",
                 Order = 3
             },
             new TemplateCard
@@ -60,7 +61,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "Meet your team",
                 Description = "Your team's channel — say hello and find your onboarding buddy.",
                 Type = CardType.Contact,
-                Url = "https://chat.meridian.local/channels/team",
+                Url = "/resources/meet-your-team",
                 Order = 4
             },
             new TemplateCard
@@ -70,7 +71,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "Your manager",
                 Description = "Direct line to your manager for questions and 1:1 scheduling.",
                 Type = CardType.Contact,
-                Url = "mailto:manager@meridian.local",
+                Url = "/resources/your-manager",
                 Order = 5
             },
             new TemplateCard
@@ -80,7 +81,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "HR contact",
                 Description = "Contracts, payroll and anything people-related.",
                 Type = CardType.Contact,
-                Url = "mailto:hr@meridian.local",
+                Url = "/resources/hr-contact",
                 Order = 6
             },
             new TemplateCard
@@ -90,7 +91,7 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Title = "IT helpdesk",
                 Description = "Hardware, accounts and access issues.",
                 Type = CardType.Contact,
-                Url = "mailto:it@meridian.local",
+                Url = "/resources/it-helpdesk",
                 Order = 7
             });
     }
