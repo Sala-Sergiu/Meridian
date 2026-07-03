@@ -22,9 +22,10 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
 const byOrder = (a: BoardCard, b: BoardCard) => a.order - b.order;
 
 // The hire's onboarding board, split by what each card IS:
-//  - Safety cards are required reading ("requires attention") — acknowledged
-//    with a mark-as-read, not dragged. Same status mechanism underneath.
-//  - Resource cards are actual tasks — the Kanban with drag & drop.
+//  - Safety cards are required reading ("requires attention") — read state
+//    shown here, acknowledged from inside the article itself.
+//  - Resource cards are actual tasks — the Kanban with drag & drop; opening
+//    a task's article moves it to InProgress, finishing it happens there too.
 //  - Contact cards are reference info — always visible, no status at all.
 // No role checks here: the backend owns authorization.
 @Component({
@@ -78,12 +79,6 @@ export class BoardPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
-  }
-
-  protected markAsRead(card: BoardCard): void {
-    if (card.status !== 'Done') {
-      this.move(card, 'Done');
-    }
   }
 
   protected dismissMoveError(): void {

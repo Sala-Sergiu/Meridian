@@ -89,21 +89,19 @@ describe('BoardPage', () => {
     expect(columnCards()['To do']).toEqual(['Handbook']);
   });
 
-  it('mark as read moves a safety card to Done optimistically and patches', () => {
-    flushBoard(controller, [card({ id: 5, type: 'Safety', title: 'Safety rules' })]);
+  it('shows read/unread state on attention items without any board-side button', () => {
+    flushBoard(controller, [
+      card({ id: 5, type: 'Safety', title: 'Safety rules', status: 'ToDo' }),
+      card({ id: 6, type: 'Safety', title: 'Confidentiality', status: 'Done' }),
+    ]);
     fixture.detectChanges();
 
-    element().querySelector<HTMLButtonElement>('.attention-item button')!.click();
-    fixture.detectChanges();
-
-    // Optimistic: read state shows BEFORE the server answers.
-    expect(element().querySelector('.attention')!.textContent).toContain('1 of 1 read');
-    expect(element().querySelector('.read-state')).not.toBeNull();
-
-    const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/5`);
-    expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ status: 'Done' });
-    req.flush({ ...card({ id: 5, type: 'Safety' }), status: 'Done' });
+    const attention = element().querySelector('.attention')!;
+    // Acknowledgment happens inside the article, not from the board.
+    expect(attention.querySelector('button')).toBeNull();
+    expect(attention.querySelector('.unread-state')).not.toBeNull();
+    expect(attention.querySelector('.read-state')?.textContent).toContain('✓ Read');
+    expect(attention.textContent).toContain('1 of 2 read');
   });
 
   it('renders contacts as reference info without any status control', () => {

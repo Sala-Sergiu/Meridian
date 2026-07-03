@@ -90,23 +90,11 @@
     }
   }
 
-  button {
+  .unread-state {
     flex-shrink: 0;
-    border: 1px solid #d9b64a;
-    background: var(--surface);
-    color: #7a5a12;
-    border-radius: 6px;
-    padding: 0.35rem 0.8rem;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      background: #faf0d7;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
+    color: #a3873c;
+    font-size: 0.85rem;
+    font-style: italic;
   }
 
   .read-state {
