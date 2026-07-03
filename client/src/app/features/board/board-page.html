@@ -1,0 +1,18 @@
+<section class="board">
+  <h2>My onboarding</h2>
+
+  <div class="kanban">
+    @for (column of columns(); track column.status) {
+      <div class="column">
+        <h3>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h3>
+
+        @for (card of column.cards; track card.id) {
+          <article class="card">
+            <h4>{{ card.title }}</h4>
+            <p>{{ card.description }}</p>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>
