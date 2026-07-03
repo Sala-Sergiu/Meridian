@@ -19,6 +19,10 @@ builder.Services
     .AddBll()
     .AddApiServices(builder.Configuration);
 
+// Health endpoint: healthy only when the database answers, so orchestrators
+// and the demo can probe readiness, not just process liveness.
+builder.Services.AddHealthChecks().AddDbContextCheck<MeridianDbContext>();
+
 // Dev-only CORS for the Angular dev server (ng serve). Allows the bearer
 // Authorization and X-Correlation-ID request headers and exposes the
 // correlation id on responses so the frontend can read it. Production serves
@@ -73,5 +77,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
