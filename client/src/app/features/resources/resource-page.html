@@ -9,6 +9,23 @@
       <h3>{{ section.heading }}</h3>
       <p>{{ section.body }}</p>
     }
+
+    @if (acknowledgeable()) {
+      <div class="acknowledge">
+        @if (done()) {
+          <span class="done-state">{{ doneLabel() }}</span>
+          <a routerLink="/board">Back to your board</a>
+        } @else {
+          <button type="button" (click)="acknowledge()" [disabled]="saving()">
+            @if (saving()) {
+              Saving…
+            } @else {
+              {{ buttonLabel() }}
+            }
+          </button>
+        }
+      </div>
+    }
   } @else {
     <h2>Resource not found</h2>
     <p class="intro">This page does not exist (yet). Head back to your board and pick a card from there.</p>
