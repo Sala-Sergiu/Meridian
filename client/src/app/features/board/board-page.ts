@@ -1,6 +1,8 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ErrorBanner } from '../../shared/ui/error-banner';
+import { Loading } from '../../shared/ui/loading';
 import { BoardService } from './board.service';
 import { BoardCard, CardStatus } from './board.models';
 
@@ -22,7 +24,7 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
 // authorization; the frontend just attempts the move.
 @Component({
   selector: 'app-board-page',
-  imports: [CdkDropListGroup, CdkDropList, CdkDrag],
+  imports: [CdkDropListGroup, CdkDropList, CdkDrag, ErrorBanner, Loading],
   templateUrl: './board-page.html',
   styleUrl: './board-page.scss',
 })
@@ -35,6 +37,9 @@ export class BoardPage implements OnInit {
   protected readonly moveError = signal<{ message: string; correlationId: string | null } | null>(
     null,
   );
+  // Card whose PATCH is in flight — shown as "saving" and not draggable again
+  // until the move settles.
+  protected readonly pendingCardId = signal<number | null>(null);
   private readonly cards = signal<BoardCard[]>([]);
 
   // One computed buckets the flat card list into the three columns; the
@@ -74,11 +79,16 @@ export class BoardPage implements OnInit {
     const previousStatus = card.status;
     this.setCardStatus(card.id, newStatus);
     this.moveError.set(null);
+    this.pendingCardId.set(card.id);
 
     this.boardService.moveCard(card.id, newStatus).subscribe({
-      next: (updated) => this.replaceCard(updated),
+      next: (updated) => {
+        this.replaceCard(updated);
+        this.pendingCardId.set(null);
+      },
       error: (err: HttpErrorResponse) => {
         this.setCardStatus(card.id, previousStatus);
+        this.pendingCardId.set(null);
 
         const problem = err.error as { correlationId?: string } | null;
         this.moveError.set({

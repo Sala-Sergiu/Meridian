@@ -6,51 +6,9 @@
 }
 
 .state {
-  color: #44546f;
-
-  &.error {
-    border: 1px solid #f3c2be;
-    background: #fdf1f0;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    color: #8f2721;
-
-    p {
-      margin: 0;
-    }
-
-    .correlation {
-      margin-top: 0.4rem;
-      font-size: 0.85rem;
-
-      code {
-        background: #f6dedc;
-        border-radius: 4px;
-        padding: 0.1rem 0.35rem;
-      }
-    }
-  }
-
-  &.move-error {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-
-    .correlation {
-      margin: 0;
-    }
-
-    button {
-      border: none;
-      background: none;
-      color: inherit;
-      font: inherit;
-      cursor: pointer;
-      line-height: 1;
-    }
-  }
+  color: var(--text-muted);
+  min-height: 3rem;
+  margin: 0 0 1rem;
 }
 
 .kanban {
@@ -107,6 +65,10 @@
 
   &.cdk-drag-placeholder {
     opacity: 0.35;
+  }
+
+  &.saving {
+    opacity: 0.55;
   }
 
   .card-top {

@@ -83,7 +83,7 @@ describe('BoardPage', () => {
     expect(element.textContent).toContain('No onboarding board has been assigned to you yet');
     expect(element.querySelectorAll('.column').length).toBe(3);
     expect(element.querySelectorAll('.card').length).toBe(0);
-    expect(element.querySelector('.error')).toBeNull();
+    expect(element.querySelector('app-error-banner')).toBeNull();
   });
 
   it('shows a loading state until the board arrives', () => {
@@ -205,6 +205,24 @@ describe('BoardPage', () => {
     banner.querySelector<HTMLButtonElement>('button')!.click();
     fixture.detectChanges();
     expect(element.querySelector('.move-error')).toBeNull();
+  });
+
+  it('marks the moved card as saving while the PATCH is in flight', () => {
+    const dragged = card({ id: 1, status: 'ToDo' });
+    flushBoard(controller, [dragged]);
+    fixture.detectChanges();
+
+    drop(dragged, 'ToDo', 'InProgress');
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.card.saving')).not.toBeNull();
+
+    controller
+      .expectOne(`${environment.apiBaseUrl}/boards/me/cards/1`)
+      .flush({ ...dragged, status: 'InProgress' });
+    fixture.detectChanges();
+
+    expect(element.querySelector('.card.saving')).toBeNull();
   });
 
   it('dropping a card into its own column is a no-op', () => {
