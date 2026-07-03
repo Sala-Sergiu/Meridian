@@ -89,4 +89,46 @@ describe('HiresPage', () => {
     expect(element.textContent).toContain('No onboarding assigned yet');
     expect(element.querySelector('tbody button')).toBeNull();
   });
+
+  it('lets HR publish an article to the template and all boards', async () => {
+    const element = await render('HR', [hire({ hireUserId: 1 })]);
+
+    const title = element.querySelector<HTMLInputElement>('.publish input[formcontrolname="title"]')!;
+    const description = element.querySelector<HTMLTextAreaElement>('.publish textarea')!;
+    title.value = 'GDPR refresher';
+    title.dispatchEvent(new Event('input'));
+    description.value = 'Annual privacy training.';
+    description.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    element.querySelector('form')!.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    const req = controller.expectOne(`${environment.apiBaseUrl}/templates/1/cards`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      title: 'GDPR refresher',
+      description: 'Annual privacy training.',
+      type: 'Resource',
+      url: null,
+    });
+    req.flush({ card: { id: 9, title: 'GDPR refresher' }, boardsUpdated: 3 });
+    fixture.detectChanges();
+
+    // The overview reloads so the new totals show up.
+    controller
+      .expectOne(`${environment.apiBaseUrl}/boards/progress`)
+      .flush([hire({ hireUserId: 1, tasksTotal: 3 })]);
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(text).toContain('3 existing board(s)');
+    expect(text).toContain('0/3');
+  });
+
+  it('hides the publish form from managers', async () => {
+    const element = await render('Manager', [hire({ hireUserId: 1 })]);
+
+    expect(element.querySelector('.publish')).toBeNull();
+  });
 });

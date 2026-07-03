@@ -68,5 +68,52 @@
         }
       </tbody>
     </table>
+
+    @if (isHr()) {
+      <section class="publish">
+        <h3>Publish a new article</h3>
+        <p class="hint">
+          Added to the onboarding template and pushed to every existing board.
+        </p>
+
+        @if (publishSuccess(); as message) {
+          <p class="publish-success" role="status">{{ message }}</p>
+        }
+        @if (publishError(); as problem) {
+          <app-error-banner [message]="problem.message" [correlationId]="problem.correlationId" />
+        }
+
+        <form [formGroup]="publishForm" (ngSubmit)="publish()">
+          <label>
+            Title
+            <input type="text" formControlName="title" placeholder="e.g. GDPR refresher" />
+          </label>
+          <label>
+            Description
+            <textarea formControlName="description" rows="2" placeholder="One or two sentences shown on the card"></textarea>
+          </label>
+          <div class="row">
+            <label>
+              Kind
+              <select formControlName="type">
+                <option value="Resource">Task (Resource)</option>
+                <option value="Safety">Required reading (Safety)</option>
+              </select>
+            </label>
+            <label class="grow">
+              Link (optional)
+              <input type="text" formControlName="url" placeholder="https://… or /resources/…" />
+            </label>
+          </div>
+          <button type="submit" [disabled]="publishing()">
+            @if (publishing()) {
+              Publishing…
+            } @else {
+              Publish to everyone
+            }
+          </button>
+        </form>
+      </section>
+    }
   }
 </section>
