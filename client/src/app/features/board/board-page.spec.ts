@@ -102,13 +102,24 @@ describe('BoardPage', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const badge = element.querySelector('.type-safety');
+    const badge = element.querySelector('.card .type-safety');
     expect(badge?.textContent?.trim()).toBe('Safety');
 
     const link = element.querySelector<HTMLAnchorElement>('.card a')!;
     expect(link.href).toBe('https://intranet.local/evacuation');
     expect(link.target).toBe('_blank');
     expect(link.rel).toBe('noopener');
+    expect(link.textContent).toContain('opens in a new tab');
+  });
+
+  it('shows a legend for the three card categories', () => {
+    flushBoard(controller, []);
+    fixture.detectChanges();
+
+    const legend = (fixture.nativeElement as HTMLElement).querySelector('.legend')!;
+    expect(legend.textContent).toContain('Resource');
+    expect(legend.textContent).toContain('Safety');
+    expect(legend.textContent).toContain('Contact');
   });
 
   it('shows a per-column empty state', () => {

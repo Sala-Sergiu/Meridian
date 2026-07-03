@@ -1,5 +1,12 @@
 <section class="board">
-  <h2>My onboarding</h2>
+  <div class="board-title">
+    <h2>My onboarding</h2>
+    <ul class="legend" aria-label="Card categories">
+      <li><span class="swatch type-resource" aria-hidden="true"></span>Resource</li>
+      <li><span class="swatch type-safety" aria-hidden="true"></span>Safety</li>
+      <li><span class="swatch type-contact" aria-hidden="true"></span>Contact</li>
+    </ul>
+  </div>
 
   @if (loading()) {
     <app-loading message="Loading your board…" />
@@ -50,7 +57,10 @@
               </div>
               <p>{{ card.description }}</p>
               @if (card.url; as url) {
-                <a [href]="url" target="_blank" rel="noopener">Open link ↗</a>
+                <a class="card-link" [href]="url" target="_blank" rel="noopener">
+                  Open link <span aria-hidden="true">↗</span>
+                  <span class="visually-hidden">(opens in a new tab)</span>
+                </a>
               }
             </article>
           } @empty {

@@ -1,7 +1,49 @@
 .board {
   h2 {
-    margin: 0 0 1rem;
+    margin: 0;
     font-size: 1.35rem;
+  }
+}
+
+.board-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .swatch {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 3px;
+
+    &.type-resource {
+      background: #1a56b0;
+    }
+
+    &.type-safety {
+      background: #a35418;
+    }
+
+    &.type-contact {
+      background: #1f7a3d;
+    }
   }
 }
 
@@ -16,26 +58,30 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   align-items: start;
+  /* Roughly one card of room from the first paint, so the columns do not
+     collapse and re-expand while cards stream in. */
+  min-height: 12rem;
 }
 
 .column {
-  background: #f4f5f7;
-  border-radius: 8px;
+  background: #eef0f3;
+  border-radius: var(--radius);
   padding: 0.75rem;
+  min-height: 10rem;
 
   h3 {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin: 0 0 0.75rem;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #44546f;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
   }
 
   .count {
-    background: #dfe3ea;
+    background: #dde1e8;
     border-radius: 999px;
     padding: 0.05rem 0.5rem;
     font-size: 0.8rem;
@@ -44,27 +90,34 @@
   .empty {
     margin: 0;
     padding: 0.75rem 0.25rem;
-    color: #7a8699;
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-style: italic;
   }
 }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(9, 30, 66, 0.2);
+  box-shadow: var(--shadow-card);
   padding: 0.65rem 0.75rem;
   margin-bottom: 0.6rem;
   cursor: grab;
+  animation: card-in 180ms ease-out;
+  transition: box-shadow 150ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-lifted);
+  }
 
   &.cdk-drag-preview {
-    box-shadow: 0 6px 16px rgba(9, 30, 66, 0.3);
+    box-shadow: var(--shadow-lifted);
     cursor: grabbing;
   }
 
   &.cdk-drag-placeholder {
     opacity: 0.35;
+    animation: none;
   }
 
   &.saving {
@@ -86,15 +139,44 @@
   p {
     margin: 0;
     font-size: 0.85rem;
-    color: #44546f;
+    color: var(--text-muted);
   }
 
-  a {
+  .card-link {
     display: inline-block;
-    margin-top: 0.4rem;
+    margin-top: 0.45rem;
     font-size: 0.85rem;
-    color: #1a56b0;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
+}
+
+/* A dropped card re-enters the target column with a short fade/slide instead
+   of teleporting. */
+@keyframes card-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .badge {
