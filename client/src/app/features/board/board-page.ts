@@ -1,3 +1,4 @@
+import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -18,10 +19,13 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
   { status: 'Done', label: 'Done' },
 ];
 
-// Read-only Kanban over the hire's own board: three status columns, cards
-// sorted by their template order. Card moves land in the next slice.
+// Kanban over the hire's own board: three status columns, cards sorted by
+// their template order. Dragging a card to another column persists the move —
+// the only write on the board. No role checks here: the backend owns
+// authorization; the frontend just attempts the move.
 @Component({
   selector: 'app-board-page',
+  imports: [CdkDropListGroup, CdkDropList, CdkDrag],
   templateUrl: './board-page.html',
   styleUrl: './board-page.scss',
 })
@@ -58,6 +62,26 @@ export class BoardPage implements OnInit {
   protected logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/login');
+  }
+
+  // Dropping into the same column is a no-op (cards keep their template
+  // order); dropping into another column moves the card there.
+  protected onDrop(event: CdkDragDrop<CardStatus>): void {
+    if (event.previousContainer === event.container) {
+      return;
+    }
+
+    this.move(event.item.data as BoardCard, event.container.data);
+  }
+
+  private move(card: BoardCard, newStatus: CardStatus): void {
+    this.boardService.moveCard(card.id, newStatus).subscribe({
+      next: (updated) => this.replaceCard(updated),
+    });
+  }
+
+  private replaceCard(updated: BoardCard): void {
+    this.cards.update((cards) => cards.map((c) => (c.id === updated.id ? updated : c)));
   }
 
   private load(): void {

@@ -138,6 +138,55 @@ describe('BoardPage', () => {
     expect(text).toContain('corr-123');
   });
 
+  // jsdom cannot perform a real pointer drag, so drop tests synthesize the
+  // CdkDragDrop event the directive would emit and call the handler directly.
+  function drop(dragged: BoardCard, from: string, to: string): void {
+    const containers: Record<string, { data: string }> = {
+      [from]: { data: from },
+      [to]: { data: to },
+    };
+    const event = {
+      previousContainer: containers[from],
+      container: containers[to],
+      item: { data: dragged },
+    };
+    (fixture.componentInstance as unknown as { onDrop(e: unknown): void }).onDrop(event);
+    fixture.detectChanges();
+  }
+
+  it('dropping a card into another column patches the move', () => {
+    const dragged = card({ id: 1, status: 'ToDo' });
+    flushBoard(controller, [dragged]);
+    fixture.detectChanges();
+
+    drop(dragged, 'ToDo', 'InProgress');
+
+    const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/1`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'InProgress' });
+    req.flush({ ...dragged, status: 'InProgress' });
+    fixture.detectChanges();
+
+    const columns = columnCards();
+    expect(columns['To do']).toEqual([]);
+    expect(columns['In progress']).toEqual(['Card 1']);
+  });
+
+  it('dropping a card into its own column is a no-op', () => {
+    const dragged = card({ id: 1, status: 'ToDo' });
+    flushBoard(controller, [dragged]);
+    fixture.detectChanges();
+
+    const container = { data: 'ToDo' };
+    (fixture.componentInstance as unknown as { onDrop(e: unknown): void }).onDrop({
+      previousContainer: container,
+      container,
+      item: { data: dragged },
+    });
+
+    controller.expectNone(`${environment.apiBaseUrl}/boards/me/cards/1`);
+  });
+
   it('shows the logged-in user and logs out to /login', () => {
     TestBed.inject(AuthState).setSession({
       token: 'jwt-abc',

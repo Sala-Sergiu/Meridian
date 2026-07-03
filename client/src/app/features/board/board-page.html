@@ -25,13 +25,18 @@
       <p class="state">No onboarding board has been assigned to you yet — check back soon.</p>
     }
 
-    <div class="kanban">
+    <div class="kanban" cdkDropListGroup>
       @for (column of columns(); track column.status) {
-        <div class="column">
+        <div
+          class="column"
+          cdkDropList
+          [cdkDropListData]="column.status"
+          (cdkDropListDropped)="onDrop($event)"
+        >
           <h3>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h3>
 
           @for (card of column.cards; track card.id) {
-            <article class="card">
+            <article class="card" cdkDrag [cdkDragData]="card">
               <div class="card-top">
                 <h4>{{ card.title }}</h4>
                 <span [class]="'badge type-' + card.type.toLowerCase()">
