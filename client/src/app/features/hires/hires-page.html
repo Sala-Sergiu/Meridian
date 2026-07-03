@@ -1,0 +1,72 @@
+<section class="hires">
+  <h2>New hires</h2>
+
+  @if (loading()) {
+    <app-loading message="Loading the hires overview…" />
+  } @else {
+    @if (error(); as problem) {
+      <app-error-banner [message]="problem.message" [correlationId]="problem.correlationId" />
+    }
+
+    <table>
+      <thead>
+        <tr>
+          <th>Hire</th>
+          <th>Required reading</th>
+          <th>Tasks</th>
+          <th class="actions-col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (hire of hires(); track hire.hireUserId) {
+          <tr>
+            <td>
+              <span class="name">{{ hire.displayName }}</span>
+              <span class="email">{{ hire.email }}</span>
+            </td>
+            @if (hire.hasBoard) {
+              <td>
+                <div class="progress-cell">
+                  <span>{{ hire.readDone }}/{{ hire.readTotal }}</span>
+                  <span class="track" aria-hidden="true">
+                    <span class="fill read" [style.width.%]="percent(hire.readDone, hire.readTotal)"></span>
+                  </span>
+                </div>
+              </td>
+              <td>
+                <div class="progress-cell">
+                  <span>{{ hire.tasksDone }}/{{ hire.tasksTotal }}</span>
+                  <span class="track" aria-hidden="true">
+                    <span class="fill" [style.width.%]="percent(hire.tasksDone, hire.tasksTotal)"></span>
+                  </span>
+                </div>
+              </td>
+              <td class="actions-col"></td>
+            } @else {
+              <td colspan="2" class="no-board">No onboarding assigned yet</td>
+              <td class="actions-col">
+                @if (isHr()) {
+                  <button
+                    type="button"
+                    (click)="assign(hire)"
+                    [disabled]="assigningId() !== null"
+                  >
+                    @if (assigningId() === hire.hireUserId) {
+                      Assigning…
+                    } @else {
+                      Assign onboarding
+                    }
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="no-board">No new hires yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

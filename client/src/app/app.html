@@ -3,7 +3,11 @@
 
   @if (user(); as currentUser) {
     <nav class="shell-nav">
-      <a routerLink="/board" routerLinkActive="active">Board</a>
+      @if (currentUser.role === 'NewHire') {
+        <a routerLink="/board" routerLinkActive="active">Board</a>
+      } @else {
+        <a routerLink="/hires" routerLinkActive="active">Hires</a>
+      }
       <a routerLink="/calendar" routerLinkActive="active">Calendar</a>
     </nav>
     <div class="whoami">

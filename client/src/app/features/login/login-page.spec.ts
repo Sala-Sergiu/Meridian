@@ -66,6 +66,19 @@ describe('LoginPage', () => {
     expect(navigate).toHaveBeenCalledWith('/board');
   });
 
+  it('lands HR on the hires tracking page', async () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    fillForm('hr@meridian.local', 'HrAdmin#123');
+    submitForm();
+
+    controller.expectOne(`${environment.apiBaseUrl}/auth/login`).flush({
+      token: 'jwt-hr',
+      user: { id: 2, email: 'hr@meridian.local', displayName: 'Hannah HR', role: 'HR' },
+    });
+
+    expect(navigate).toHaveBeenCalledWith('/hires');
+  });
+
   it('shows the generic error message when the login fails', () => {
     fillForm('newhire@meridian.local', 'wrong');
     submitForm();

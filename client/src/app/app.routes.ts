@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/board/board-page').then((m) => m.BoardPage),
   },
   {
+    path: 'hires',
+    title: 'New hires · Meridian',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/hires/hires-page').then((m) => m.HiresPage),
+  },
+  {
     path: 'calendar',
     title: 'My calendar · Meridian',
     canActivate: [authGuard],

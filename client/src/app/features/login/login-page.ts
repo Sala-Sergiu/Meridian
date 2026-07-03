@@ -36,7 +36,9 @@ export class LoginPage {
     this.error.set(null);
 
     this.authService.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl('/board'),
+      // Role-based landing: hires work their board; HR/Manager track hires.
+      // UX only — the backend policies decide what each role may actually do.
+      next: (result) => this.router.navigateByUrl(result.user.role === 'NewHire' ? '/board' : '/hires'),
       error: () => {
         this.loading.set(false);
         this.error.set('Invalid email or password.');
