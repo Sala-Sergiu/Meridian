@@ -21,6 +21,10 @@ public class MeridianDbContext : DbContext
 
     public DbSet<BoardCard> BoardCards => Set<BoardCard>();
 
+    public DbSet<EmployeeSchedule> EmployeeSchedules => Set<EmployeeSchedule>();
+
+    public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeridianDbContext).Assembly);
