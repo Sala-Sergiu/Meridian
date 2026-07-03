@@ -1,5 +1,13 @@
 <section class="board">
-  <h2>My onboarding</h2>
+  <div class="board-header">
+    <h2>My onboarding</h2>
+    <div class="whoami">
+      @if (user(); as currentUser) {
+        <span>{{ currentUser.displayName }}</span>
+      }
+      <button type="button" (click)="logout()">Log out</button>
+    </div>
+  </div>
 
   @if (loading()) {
     <p class="state">Loading your board…</p>

@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { AuthState } from '../../core/auth/auth-state';
 import { environment } from '../../../environments/environment';
 import { BoardCard } from './board.models';
 import { BoardPage } from './board-page';
@@ -135,5 +136,24 @@ describe('BoardPage', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent!;
     expect(text).toContain('Could not load your board.');
     expect(text).toContain('corr-123');
+  });
+
+  it('shows the logged-in user and logs out to /login', () => {
+    TestBed.inject(AuthState).setSession({
+      token: 'jwt-abc',
+      user: { id: 1, email: 'newhire@meridian.local', displayName: 'Nadia NewHire', role: 'NewHire' },
+    });
+    flushBoard(controller, []);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.whoami')?.textContent).toContain('Nadia NewHire');
+
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    element.querySelector<HTMLButtonElement>('.whoami button')!.click();
+
+    expect(TestBed.inject(AuthState).isAuthenticated()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith('/login');
   });
 });
