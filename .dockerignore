@@ -1,0 +1,8 @@
+# Keep the build context small: only source is needed inside the image.
+**/bin/
+**/obj/
+client/
+.git/
+.vs/
+*.md
+docker-compose.yml
