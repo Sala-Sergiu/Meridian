@@ -94,6 +94,18 @@ public class BoardsController : ControllerBase
         return card is null ? NotFound() : Ok(card);
     }
 
+    // HR/Manager tracking view: every new hire with their onboarding progress.
+    // Static segment, so it never collides with the {hireUserId:int} route.
+    [HttpGet("progress")]
+    [Authorize(Policy = Policies.HrOrManagerRead)]
+    [ProducesResponseType(typeof(IReadOnlyList<HireProgressDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<HireProgressDto>>> GetProgress(CancellationToken cancellationToken)
+    {
+        return Ok(await _boards.GetHireProgressAsync(cancellationToken));
+    }
+
     // HR/Manager progress view over any hire's board. A NewHire never satisfies
     // this policy, so they cannot read another hire's board through this route.
     [HttpGet("{hireUserId:int}")]

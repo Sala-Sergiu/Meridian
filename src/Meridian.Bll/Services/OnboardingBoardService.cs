@@ -17,13 +17,16 @@ public class OnboardingBoardService : IOnboardingBoardService
 {
     private readonly IOnboardingTemplateRepository _templates;
     private readonly IOnboardingBoardRepository _boards;
+    private readonly IUserRepository _users;
 
     public OnboardingBoardService(
         IOnboardingTemplateRepository templates,
-        IOnboardingBoardRepository boards)
+        IOnboardingBoardRepository boards,
+        IUserRepository users)
     {
         _templates = templates;
         _boards = boards;
+        _users = users;
     }
 
     public async Task<AssignBoardResultDto?> AssignAsync(int templateId, int hireUserId, CancellationToken cancellationToken = default)
@@ -115,6 +118,33 @@ public class OnboardingBoardService : IOnboardingBoardService
         await _boards.UpdateCardAsync(card, cancellationToken);
 
         return card.Adapt<BoardCardDto>();
+    }
+
+    public async Task<IReadOnlyList<HireProgressDto>> GetHireProgressAsync(CancellationToken cancellationToken = default)
+    {
+        var hires = await _users.GetByRoleAsync(Role.NewHire, cancellationToken);
+        var boards = (await _boards.GetAllAsync(cancellationToken))
+            .ToDictionary(b => b.HireUserId);
+
+        return hires.Select(hire =>
+        {
+            boards.TryGetValue(hire.Id, out var board);
+            ICollection<BoardCard> cards = board?.Cards ?? new List<BoardCard>();
+            var tasks = cards.Where(c => c.Type == CardType.Resource).ToList();
+            var reading = cards.Where(c => c.Type == CardType.Safety).ToList();
+
+            return new HireProgressDto
+            {
+                HireUserId = hire.Id,
+                DisplayName = hire.DisplayName,
+                Email = hire.Email,
+                HasBoard = board is not null,
+                TasksDone = tasks.Count(c => c.Status == CardStatus.Done),
+                TasksTotal = tasks.Count,
+                ReadDone = reading.Count(c => c.Status == CardStatus.Done),
+                ReadTotal = reading.Count
+            };
+        }).ToList();
     }
 
     public async Task<PagedResult<BoardCardDto>?> GetMyBoardCardsAsync(

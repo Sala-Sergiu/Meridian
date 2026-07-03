@@ -20,4 +20,13 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<User>> GetByRoleAsync(Domain.Enums.Role role, CancellationToken cancellationToken = default)
+    {
+        return await Context.Set<User>()
+            .AsNoTracking()
+            .Where(u => u.Role == role)
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(cancellationToken);
+    }
 }

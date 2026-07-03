@@ -7,4 +7,6 @@ namespace Meridian.Domain.Repositories;
 public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<User>> GetByRoleAsync(Enums.Role role, CancellationToken cancellationToken = default);
 }

@@ -22,6 +22,11 @@ public interface IOnboardingBoardService
         BoardCardsQueryDto query,
         CancellationToken cancellationToken = default);
 
+    // Tracking view for HR/Manager: every NewHire with their onboarding
+    // progress (tasks done, required reading read), including hires that have
+    // no board assigned yet.
+    Task<IReadOnlyList<HireProgressDto>> GetHireProgressAsync(CancellationToken cancellationToken = default);
+
     // Moves a card on the hire's OWN board to a new status. Ownership is
     // checked here in the business layer: the card must sit on the caller's
     // board. Null means "no such card on your board" — deliberately the same

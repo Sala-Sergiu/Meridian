@@ -15,6 +15,7 @@ public class OnboardingBoardServiceTests
 {
     private readonly IOnboardingTemplateRepository _templates = Substitute.For<IOnboardingTemplateRepository>();
     private readonly IOnboardingBoardRepository _boards = Substitute.For<IOnboardingBoardRepository>();
+    private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly OnboardingBoardService _sut;
 
     static OnboardingBoardServiceTests()
@@ -24,7 +25,7 @@ public class OnboardingBoardServiceTests
 
     public OnboardingBoardServiceTests()
     {
-        _sut = new OnboardingBoardService(_templates, _boards);
+        _sut = new OnboardingBoardService(_templates, _boards, _users);
     }
 
     private static OnboardingTemplate Template() => new()
