@@ -17,3 +17,6 @@ obj/
 ## Local config / secrets
 appsettings.*.local.json
 *.env
+
+## Local working material (not part of the deliverable)
+Meridian Project (EN).pdf
