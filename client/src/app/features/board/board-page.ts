@@ -1,6 +1,7 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { ErrorBanner } from '../../shared/ui/error-banner';
 import { Loading } from '../../shared/ui/loading';
 import { BoardService } from './board.service';
@@ -24,7 +25,7 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
 // authorization; the frontend just attempts the move.
 @Component({
   selector: 'app-board-page',
-  imports: [CdkDropListGroup, CdkDropList, CdkDrag, ErrorBanner, Loading],
+  imports: [CdkDropListGroup, CdkDropList, CdkDrag, ErrorBanner, Loading, RouterLink],
   templateUrl: './board-page.html',
   styleUrl: './board-page.scss',
 })

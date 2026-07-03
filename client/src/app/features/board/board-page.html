@@ -57,10 +57,14 @@
               </div>
               <p>{{ card.description }}</p>
               @if (card.url; as url) {
-                <a class="card-link" [href]="url" target="_blank" rel="noopener">
-                  Open link <span aria-hidden="true">↗</span>
-                  <span class="visually-hidden">(opens in a new tab)</span>
-                </a>
+                @if (url.startsWith('/')) {
+                  <a class="card-link" [routerLink]="url">View details <span aria-hidden="true">→</span></a>
+                } @else {
+                  <a class="card-link" [href]="url" target="_blank" rel="noopener">
+                    Open link <span aria-hidden="true">↗</span>
+                    <span class="visually-hidden">(opens in a new tab)</span>
+                  </a>
+                }
               }
             </article>
           } @empty {

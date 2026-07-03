@@ -17,5 +17,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/board/board-page').then((m) => m.BoardPage),
   },
+  {
+    path: 'resources/:slug',
+    title: 'Resource · Meridian',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/resources/resource-page').then((m) => m.ResourcePage),
+  },
   { path: '**', redirectTo: 'board' },
 ];

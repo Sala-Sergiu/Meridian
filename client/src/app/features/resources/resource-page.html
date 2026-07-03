@@ -1,0 +1,16 @@
+<section class="resource">
+  <a class="back" routerLink="/board">← Back to board</a>
+
+  @if (resource(); as content) {
+    <h2>{{ content.title }}</h2>
+    <p class="intro">{{ content.intro }}</p>
+
+    @for (section of content.sections; track section.heading) {
+      <h3>{{ section.heading }}</h3>
+      <p>{{ section.body }}</p>
+    }
+  } @else {
+    <h2>Resource not found</h2>
+    <p class="intro">This page does not exist (yet). Head back to your board and pick a card from there.</p>
+  }
+</section>

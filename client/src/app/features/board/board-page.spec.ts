@@ -112,6 +112,16 @@ describe('BoardPage', () => {
     expect(link.textContent).toContain('opens in a new tab');
   });
 
+  it('renders an in-app router link for relative card urls', () => {
+    flushBoard(controller, [card({ id: 1, url: '/resources/safety-basics' })]);
+    fixture.detectChanges();
+
+    const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('.card a')!;
+    expect(link.getAttribute('href')).toBe('/resources/safety-basics');
+    expect(link.textContent).toContain('View details');
+    expect(link.target).not.toBe('_blank');
+  });
+
   it('shows a legend for the three card categories', () => {
     flushBoard(controller, []);
     fixture.detectChanges();
