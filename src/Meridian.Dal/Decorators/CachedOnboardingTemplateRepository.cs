@@ -58,4 +58,15 @@ public class CachedOnboardingTemplateRepository : IOnboardingTemplateRepository
 
         return templates;
     }
+
+    public async Task AddCardAsync(TemplateCard card, CancellationToken cancellationToken = default)
+    {
+        await _inner.AddCardAsync(card, cancellationToken);
+
+        // Write-through invalidation: the next read repopulates from the
+        // database, so a just-published card is visible immediately instead
+        // of after the TTL.
+        _cache.Remove(AllKey);
+        _cache.Remove($"{ByIdKeyPrefix}{card.TemplateId}");
+    }
 }

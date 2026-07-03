@@ -29,4 +29,10 @@ public class OnboardingTemplateRepository : RepositoryBase<OnboardingTemplate>, 
             .Include(t => t.Cards.OrderBy(c => c.Order))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task AddCardAsync(TemplateCard card, CancellationToken cancellationToken = default)
+    {
+        Context.Set<TemplateCard>().Add(card);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
 }

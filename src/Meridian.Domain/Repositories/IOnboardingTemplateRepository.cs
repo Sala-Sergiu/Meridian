@@ -9,4 +9,7 @@ namespace Meridian.Domain.Repositories;
 // in Dal because templates are read on every board view and change rarely.
 public interface IOnboardingTemplateRepository : IRepository<OnboardingTemplate>
 {
+    // Adds a new card to an existing template. Persists immediately — the
+    // DbContext is the unit of work. The caching decorator invalidates on this.
+    Task AddCardAsync(TemplateCard card, CancellationToken cancellationToken = default);
 }

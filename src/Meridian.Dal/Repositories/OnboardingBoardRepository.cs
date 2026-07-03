@@ -54,6 +54,12 @@ public class OnboardingBoardRepository : RepositoryBase<OnboardingBoard>, IOnboa
         await Context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AddCardsAsync(IReadOnlyList<BoardCard> cards, CancellationToken cancellationToken = default)
+    {
+        Context.Set<BoardCard>().AddRange(cards);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<PagedItems<BoardCard>?> GetBoardCardsAsync(
         int hireUserId,
         IReadOnlyList<IQueryStep<BoardCard>> steps,

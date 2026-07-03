@@ -11,6 +11,7 @@ namespace Meridian.UnitTests.Services;
 public class OnboardingTemplateServiceTests
 {
     private readonly IOnboardingTemplateRepository _repository = Substitute.For<IOnboardingTemplateRepository>();
+    private readonly IOnboardingBoardRepository _boards = Substitute.For<IOnboardingBoardRepository>();
     private readonly OnboardingTemplateService _sut;
 
     static OnboardingTemplateServiceTests()
@@ -20,7 +21,7 @@ public class OnboardingTemplateServiceTests
 
     public OnboardingTemplateServiceTests()
     {
-        _sut = new OnboardingTemplateService(_repository);
+        _sut = new OnboardingTemplateService(_repository, _boards);
     }
 
     private static OnboardingTemplate SeededTemplate() => new()

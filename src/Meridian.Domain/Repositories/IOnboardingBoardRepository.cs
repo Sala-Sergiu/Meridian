@@ -18,6 +18,10 @@ public interface IOnboardingBoardRepository : IRepository<OnboardingBoard>
     // is the unit of work; no IUnitOfWork.
     Task UpdateCardAsync(BoardCard card, CancellationToken cancellationToken = default);
 
+    // Bulk-adds cards (one per board) in a single save — used when HR
+    // publishes a new article to every existing board.
+    Task AddCardsAsync(IReadOnlyList<BoardCard> cards, CancellationToken cancellationToken = default);
+
     // Runs the composed query pipeline over the hire's board cards and returns
     // materialized results — IQueryable never escapes Dal. TotalCount is
     // computed before any IPagingStep is applied. Null when the hire has no
