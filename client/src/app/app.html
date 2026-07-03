@@ -2,6 +2,10 @@
   <h1 class="wordmark"><a routerLink="/board">Meridian<span class="dot">.</span></a></h1>
 
   @if (user(); as currentUser) {
+    <nav class="shell-nav">
+      <a routerLink="/board" routerLinkActive="active">Board</a>
+      <a routerLink="/calendar" routerLinkActive="active">Calendar</a>
+    </nav>
     <div class="whoami">
       <span class="name">{{ currentUser.displayName }}</span>
       <span class="role">{{ currentUser.role }}</span>

@@ -1,0 +1,45 @@
+<section class="calendar">
+  <div class="calendar-header">
+    <h2>My work calendar</h2>
+    <div class="month-nav">
+      <button type="button" (click)="previousMonth()" aria-label="Previous month">‹</button>
+      <span class="month-label">{{ monthLabel() }}</span>
+      <button type="button" (click)="nextMonth()" aria-label="Next month">›</button>
+    </div>
+  </div>
+
+  <ul class="calendar-legend" aria-label="Day types">
+    <li><span class="swatch kind-office" aria-hidden="true"></span>Office</li>
+    <li><span class="swatch kind-remote" aria-hidden="true"></span>Remote</li>
+    <li><span class="swatch kind-holiday" aria-hidden="true"></span>Public holiday</li>
+    <li><span class="swatch kind-weekend" aria-hidden="true"></span>Weekend</li>
+  </ul>
+
+  @if (loading()) {
+    <app-loading message="Loading your calendar…" />
+  } @else if (error(); as problem) {
+    <app-error-banner [message]="problem.message" [correlationId]="problem.correlationId" />
+  } @else {
+    <div class="grid" role="grid">
+      @for (weekday of weekdays; track weekday) {
+        <div class="weekday">{{ weekday }}</div>
+      }
+      @for (cell of cells(); track $index) {
+        @if (cell.day; as day) {
+          <div class="cell" [class]="'cell kind-' + day.kind.toLowerCase()" [class.today]="cell.isToday">
+            <span class="day-number">{{ cell.dayNumber }}</span>
+            <span class="day-kind">
+              @if (day.kind === 'Holiday') {
+                {{ day.holidayName }}
+              } @else if (day.kind !== 'Weekend') {
+                {{ day.kind }}
+              }
+            </span>
+          </div>
+        } @else {
+          <div class="cell blank"></div>
+        }
+      }
+    </div>
+  }
+</section>
