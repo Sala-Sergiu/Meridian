@@ -52,4 +52,25 @@ describe('BoardService', () => {
     expect(result?.items.length).toBe(1);
     expect(result?.items[0].type).toBe('Resource');
   });
+
+  it('moves a card by patching the new status without any hire id', () => {
+    let result: BoardCard | undefined;
+    service.moveCard(5, 'InProgress').subscribe((card) => (result = card));
+
+    const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/5`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'InProgress' });
+
+    req.flush({
+      id: 5,
+      title: 'Read the handbook',
+      description: 'Company handbook',
+      type: 'Resource',
+      url: null,
+      order: 1,
+      status: 'InProgress',
+    });
+
+    expect(result?.status).toBe('InProgress');
+  });
 });

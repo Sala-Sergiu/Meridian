@@ -2,7 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
-import { BoardCard, PagedResult } from './board.models';
+import { BoardCard, CardStatus, PagedResult } from './board.models';
 
 // Reads the authenticated hire's own board. The auth interceptor attaches the
 // token and the backend resolves the hire from the JWT sub claim — no hire id
@@ -17,5 +17,12 @@ export class BoardService {
   getMyBoard(): Observable<PagedResult<BoardCard>> {
     const params = new HttpParams().set('sort', 'asc').set('pageSize', 100);
     return this.api.get<PagedResult<BoardCard>>('boards/me', params);
+  }
+
+  // The only write from the frontend: move one of the hire's OWN cards to a
+  // new column. Owner-only is enforced by the backend (BoardOwnerWrite policy
+  // + own-board scoping) — the frontend just attempts the move.
+  moveCard(cardId: number, status: CardStatus): Observable<BoardCard> {
+    return this.api.patch<BoardCard>(`boards/me/cards/${cardId}`, { status });
   }
 }
