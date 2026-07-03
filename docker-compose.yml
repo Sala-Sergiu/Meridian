@@ -1,6 +1,10 @@
 # Meridian demo stack: `docker compose up` from a clean checkout brings up
-# MSSQL + the API; the API applies EF migrations (schema + HasData seed) once
-# SQL Server reports healthy. Swagger: http://localhost:5044/swagger
+# MSSQL + the API + the Angular frontend; the API applies EF migrations
+# (schema + HasData seed) once SQL Server reports healthy.
+#   App:     http://localhost:8081
+#   Swagger: http://localhost:5044/swagger
+# (ng serve on 4200 remains the DEVELOPMENT flow — hot reload against the
+# same API; this stack is for running the finished app.)
 #
 # The SA password below is a DEV/DEMO credential only (same as the default in
 # appsettings.json); override with MSSQL_SA_PASSWORD for anything else.
@@ -48,6 +52,17 @@ services:
       # Same host port as local dev (launchSettings), so the Angular dev
       # server's apiBaseUrl works unchanged against the compose stack.
       - "5044:8080"
+
+  web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      # nginx serves the production bundle and proxies /api to the api
+      # service — same origin, no CORS involved.
+      - "8081:80"
 
 volumes:
   mssql-data:
