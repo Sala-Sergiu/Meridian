@@ -32,6 +32,24 @@ export const RESOURCE_CONTENT: Record<string, ResourceContent> = {
       },
     ],
   },
+  'data-confidentiality': {
+    title: 'Data & client confidentiality',
+    intro: 'Company and client information stays inside the company — what that means in practice.',
+    sections: [
+      {
+        heading: 'Client data',
+        body: 'Never copy client data outside company systems — no personal laptops, no private cloud drives, no screenshots in public channels.',
+      },
+      {
+        heading: 'Credentials',
+        body: 'Your accounts are personal: never share passwords or access tokens, not even with colleagues. Use the company password manager.',
+      },
+      {
+        heading: 'Talking about work',
+        body: 'Project names, clients and internal numbers are confidential by default. When in doubt whether something can be shared, ask HR first.',
+      },
+    ],
+  },
   'employee-handbook': {
     title: 'Employee handbook',
     intro: 'Company policies, benefits and day-to-day practicalities.',

@@ -93,6 +93,16 @@ public class TemplateCardConfiguration : IEntityTypeConfiguration<TemplateCard>
                 Type = CardType.Contact,
                 Url = "/resources/it-helpdesk",
                 Order = 7
+            },
+            new TemplateCard
+            {
+                Id = 8,
+                TemplateId = 1,
+                Title = "Data & client confidentiality",
+                Description = "Company and client information stays inside the company — required reading.",
+                Type = CardType.Safety,
+                Url = "/resources/data-confidentiality",
+                Order = 8
             });
     }
 }
