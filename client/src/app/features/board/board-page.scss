@@ -57,6 +57,27 @@
       }
     }
   }
+
+  &.move-error {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    .correlation {
+      margin: 0;
+    }
+
+    button {
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      line-height: 1;
+    }
+  }
 }
 
 .kanban {

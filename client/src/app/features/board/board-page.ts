@@ -41,6 +41,9 @@ export class BoardPage implements OnInit {
   protected readonly loading = signal(true);
   protected readonly noBoard = signal(false);
   protected readonly error = signal<{ message: string; correlationId: string | null } | null>(null);
+  protected readonly moveError = signal<{ message: string; correlationId: string | null } | null>(
+    null,
+  );
   private readonly cards = signal<BoardCard[]>([]);
 
   // One computed buckets the flat card list into the three columns; the
@@ -74,10 +77,34 @@ export class BoardPage implements OnInit {
     this.move(event.item.data as BoardCard, event.container.data);
   }
 
+  protected dismissMoveError(): void {
+    this.moveError.set(null);
+  }
+
+  // Optimistic: the card jumps columns immediately; the PATCH runs after. On
+  // success the server DTO is taken as truth; on failure the card is put back
+  // where it was and the ProblemDetails correlation id is surfaced.
   private move(card: BoardCard, newStatus: CardStatus): void {
+    const previousStatus = card.status;
+    this.setCardStatus(card.id, newStatus);
+    this.moveError.set(null);
+
     this.boardService.moveCard(card.id, newStatus).subscribe({
       next: (updated) => this.replaceCard(updated),
+      error: (err: HttpErrorResponse) => {
+        this.setCardStatus(card.id, previousStatus);
+
+        const problem = err.error as { correlationId?: string } | null;
+        this.moveError.set({
+          message: `Could not move "${card.title}" — it has been put back.`,
+          correlationId: problem?.correlationId ?? null,
+        });
+      },
     });
+  }
+
+  private setCardStatus(cardId: number, status: CardStatus): void {
+    this.cards.update((cards) => cards.map((c) => (c.id === cardId ? { ...c, status } : c)));
   }
 
   private replaceCard(updated: BoardCard): void {

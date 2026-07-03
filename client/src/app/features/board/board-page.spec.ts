@@ -154,12 +154,15 @@ describe('BoardPage', () => {
     fixture.detectChanges();
   }
 
-  it('dropping a card into another column patches the move', () => {
+  it('dropping a card into another column moves it optimistically, then patches', () => {
     const dragged = card({ id: 1, status: 'ToDo' });
     flushBoard(controller, [dragged]);
     fixture.detectChanges();
 
     drop(dragged, 'ToDo', 'InProgress');
+
+    // The card has already jumped columns BEFORE the server answers.
+    expect(columnCards()['In progress']).toEqual(['Card 1']);
 
     const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/1`);
     expect(req.request.method).toBe('PATCH');
@@ -170,6 +173,39 @@ describe('BoardPage', () => {
     const columns = columnCards();
     expect(columns['To do']).toEqual([]);
     expect(columns['In progress']).toEqual(['Card 1']);
+  });
+
+  it('reverts the card and shows the correlation id when the move fails', () => {
+    const dragged = card({ id: 1, status: 'ToDo' });
+    flushBoard(controller, [dragged]);
+    fixture.detectChanges();
+
+    drop(dragged, 'ToDo', 'Done');
+    expect(columnCards()['Done']).toEqual(['Card 1']);
+
+    controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/1`).flush(
+      {
+        type: 'https://httpstatuses.io/500',
+        title: 'An unexpected error occurred.',
+        status: 500,
+        correlationId: 'corr-move-9',
+      },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+    fixture.detectChanges();
+
+    const columns = columnCards();
+    expect(columns['To do']).toEqual(['Card 1']);
+    expect(columns['Done']).toEqual([]);
+
+    const element = fixture.nativeElement as HTMLElement;
+    const banner = element.querySelector('.move-error')!;
+    expect(banner.textContent).toContain('it has been put back');
+    expect(banner.textContent).toContain('corr-move-9');
+
+    banner.querySelector<HTMLButtonElement>('button')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.move-error')).toBeNull();
   });
 
   it('dropping a card into its own column is a no-op', () => {

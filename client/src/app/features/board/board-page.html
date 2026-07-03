@@ -25,6 +25,18 @@
       <p class="state">No onboarding board has been assigned to you yet — check back soon.</p>
     }
 
+    @if (moveError(); as problem) {
+      <div class="state error move-error" role="alert">
+        <p>
+          {{ problem.message }}
+          @if (problem.correlationId; as correlationId) {
+            <span class="correlation">(support id: <code>{{ correlationId }}</code>)</span>
+          }
+        </p>
+        <button type="button" (click)="dismissMoveError()" aria-label="Dismiss">✕</button>
+      </div>
+    }
+
     <div class="kanban" cdkDropListGroup>
       @for (column of columns(); track column.status) {
         <div
