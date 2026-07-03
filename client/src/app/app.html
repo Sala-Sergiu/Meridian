@@ -1,9 +1,13 @@
 <header class="shell-header">
-  <h1>{{ title() }}</h1>
-  <nav>
-    <a routerLink="/board">Board</a>
-    <a routerLink="/login">Login</a>
-  </nav>
+  <h1 class="wordmark"><a routerLink="/board">Meridian<span class="dot">.</span></a></h1>
+
+  @if (user(); as currentUser) {
+    <div class="whoami">
+      <span class="name">{{ currentUser.displayName }}</span>
+      <span class="role">{{ currentUser.role }}</span>
+      <button type="button" (click)="logout()">Log out</button>
+    </div>
+  }
 </header>
 
 <main>

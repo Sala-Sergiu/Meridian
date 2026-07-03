@@ -1,1 +1,56 @@
-/* You can add global styles to this file, and also import other style files */
+/* Meridian global styles: one accent color, light neutral background,
+   system typography. Components size themselves off these tokens so the
+   whole app reads as one design. */
+
+:root {
+  --accent: #2f5fd0;
+  --accent-hover: #274fb4;
+  --accent-soft: #e6edfb;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1f2733;
+  --text-muted: #5b6675;
+  --border: #e2e6ec;
+  --danger-bg: #fdf1f0;
+  --danger-border: #f3c2be;
+  --danger-text: #8f2721;
+  --radius: 8px;
+  --shadow-card: 0 1px 2px rgba(15, 30, 60, 0.14);
+  --shadow-lifted: 0 6px 16px rgba(15, 30, 60, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+}
+
+button {
+  font: inherit;
+}
+
+/* One visible focus style everywhere — keyboard users always know where
+   they are, pointer clicks stay outline-free. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

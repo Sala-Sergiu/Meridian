@@ -1,34 +1,7 @@
 .board {
   h2 {
-    margin: 0;
-  }
-}
-
-.board-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-
-  .whoami {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #44546f;
-    font-size: 0.9rem;
-
-    button {
-      border: 1px solid #c6ccd7;
-      background: #fff;
-      border-radius: 4px;
-      padding: 0.3rem 0.7rem;
-      font: inherit;
-      cursor: pointer;
-
-      &:hover {
-        background: #f4f5f7;
-      }
-    }
+    margin: 0 0 1rem;
+    font-size: 1.35rem;
   }
 }
 

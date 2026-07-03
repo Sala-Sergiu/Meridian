@@ -1,9 +1,6 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { AuthState } from '../../core/auth/auth-state';
-import { AuthService } from '../../core/auth/auth.service';
 import { BoardService } from './board.service';
 import { BoardCard, CardStatus } from './board.models';
 
@@ -31,12 +28,6 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
 })
 export class BoardPage implements OnInit {
   private readonly boardService = inject(BoardService);
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-
-  // For display only (name in the header) — the backend decides what this
-  // user may actually see or do.
-  protected readonly user = inject(AuthState).user;
 
   protected readonly loading = signal(true);
   protected readonly noBoard = signal(false);
@@ -60,11 +51,6 @@ export class BoardPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
-  }
-
-  protected logout(): void {
-    this.authService.logout();
-    this.router.navigateByUrl('/login');
   }
 
   // Dropping into the same column is a no-op (cards keep their template
