@@ -1,12 +1,5 @@
 <section class="board">
-  <div class="board-title">
-    <h2>My onboarding</h2>
-    <ul class="legend" aria-label="Card categories">
-      <li><span class="swatch type-resource" aria-hidden="true"></span>Resource</li>
-      <li><span class="swatch type-safety" aria-hidden="true"></span>Safety</li>
-      <li><span class="swatch type-contact" aria-hidden="true"></span>Contact</li>
-    </ul>
-  </div>
+  <h2>My onboarding</h2>
 
   @if (loading()) {
     <app-loading message="Loading your board…" />
@@ -31,47 +24,116 @@
       />
     }
 
-    <div class="kanban" cdkDropListGroup>
-      @for (column of columns(); track column.status) {
-        <div
-          class="column"
-          cdkDropList
-          [cdkDropListData]="column.status"
-          (cdkDropListDropped)="onDrop($event)"
-        >
-          <h3>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h3>
+    @if (allDone()) {
+      <p class="all-done">🎉 All set — you have read everything and finished every task. Great start!</p>
+    }
 
-          @for (card of column.cards; track card.id) {
-            <article
-              class="card"
-              [class.saving]="pendingCardId() === card.id"
-              cdkDrag
-              [cdkDragData]="card"
-              [cdkDragDisabled]="pendingCardId() !== null"
-            >
-              <div class="card-top">
-                <h4>{{ card.title }}</h4>
-                <span [class]="'badge type-' + card.type.toLowerCase()">
-                  {{ card.type }}
-                </span>
-              </div>
+    @if (attention().length > 0) {
+      <section class="attention">
+        <h3>
+          <span aria-hidden="true">⚠</span> Requires attention
+          <span class="count">{{ attentionRead() }} of {{ attention().length }} read</span>
+        </h3>
+        @for (card of attention(); track card.id) {
+          <article class="attention-item" [class.saving]="pendingCardId() === card.id">
+            <div class="attention-body">
+              <h4>{{ card.title }}</h4>
               <p>{{ card.description }}</p>
               @if (card.url; as url) {
                 @if (url.startsWith('/')) {
-                  <a class="card-link" [routerLink]="url">View details <span aria-hidden="true">→</span></a>
+                  <a [routerLink]="url">Read the guide <span aria-hidden="true">→</span></a>
                 } @else {
-                  <a class="card-link" [href]="url" target="_blank" rel="noopener">
-                    Open link <span aria-hidden="true">↗</span>
-                    <span class="visually-hidden">(opens in a new tab)</span>
-                  </a>
+                  <a [href]="url" target="_blank" rel="noopener">Read the guide <span aria-hidden="true">↗</span></a>
+                }
+              }
+            </div>
+            @if (card.status === 'Done') {
+              <span class="read-state">✓ Read</span>
+            } @else {
+              <button
+                type="button"
+                (click)="markAsRead(card)"
+                [disabled]="pendingCardId() !== null"
+              >
+                Mark as read
+              </button>
+            }
+          </article>
+        }
+      </section>
+    }
+
+    <section class="tasks">
+      <div class="tasks-header">
+        <h3>Your tasks</h3>
+        @if (tasksTotal() > 0) {
+          <div class="progress" role="status">
+            <span class="progress-label">{{ tasksDone() }} of {{ tasksTotal() }} done</span>
+            <span class="progress-track" aria-hidden="true">
+              <span class="progress-fill" [style.width.%]="(tasksDone() / tasksTotal()) * 100"></span>
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="kanban" cdkDropListGroup>
+        @for (column of columns(); track column.status) {
+          <div
+            class="column"
+            cdkDropList
+            [cdkDropListData]="column.status"
+            (cdkDropListDropped)="onDrop($event)"
+          >
+            <h4>{{ column.label }} <span class="count">{{ column.cards.length }}</span></h4>
+
+            @for (card of column.cards; track card.id) {
+              <article
+                class="card"
+                [class.saving]="pendingCardId() === card.id"
+                cdkDrag
+                [cdkDragData]="card"
+                [cdkDragDisabled]="pendingCardId() !== null"
+              >
+                <h5>{{ card.title }}</h5>
+                <p>{{ card.description }}</p>
+                @if (card.url; as url) {
+                  @if (url.startsWith('/')) {
+                    <a class="card-link" [routerLink]="url">View details <span aria-hidden="true">→</span></a>
+                  } @else {
+                    <a class="card-link" [href]="url" target="_blank" rel="noopener">
+                      Open link <span aria-hidden="true">↗</span>
+                      <span class="visually-hidden">(opens in a new tab)</span>
+                    </a>
+                  }
+                }
+              </article>
+            } @empty {
+              <p class="empty">Nothing here yet</p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (contacts().length > 0) {
+      <section class="contacts">
+        <h3>Your contacts</h3>
+        <div class="contacts-grid">
+          @for (card of contacts(); track card.id) {
+            <article class="contact">
+              <h4>{{ card.title }}</h4>
+              <p>{{ card.description }}</p>
+              @if (card.url; as url) {
+                @if (url.startsWith('/')) {
+                  <a [routerLink]="url">View details <span aria-hidden="true">→</span></a>
+                } @else {
+                  <a [href]="url" target="_blank" rel="noopener">Open link <span aria-hidden="true">↗</span></a>
                 }
               }
             </article>
-          } @empty {
-            <p class="empty">Nothing here yet</p>
           }
         </div>
-      }
-    </div>
+      </section>
+    }
   }
 </section>

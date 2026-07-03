@@ -19,10 +19,14 @@ const COLUMN_DEFS: { status: CardStatus; label: string }[] = [
   { status: 'Done', label: 'Done' },
 ];
 
-// Kanban over the hire's own board: three status columns, cards sorted by
-// their template order. Dragging a card to another column persists the move —
-// the only write on the board. No role checks here: the backend owns
-// authorization; the frontend just attempts the move.
+const byOrder = (a: BoardCard, b: BoardCard) => a.order - b.order;
+
+// The hire's onboarding board, split by what each card IS:
+//  - Safety cards are required reading ("requires attention") — acknowledged
+//    with a mark-as-read, not dragged. Same status mechanism underneath.
+//  - Resource cards are actual tasks — the Kanban with drag & drop.
+//  - Contact cards are reference info — always visible, no status at all.
+// No role checks here: the backend owns authorization.
 @Component({
   selector: 'app-board-page',
   imports: [CdkDropListGroup, CdkDropList, CdkDrag, ErrorBanner, Loading, RouterLink],
@@ -38,25 +42,52 @@ export class BoardPage implements OnInit {
   protected readonly moveError = signal<{ message: string; correlationId: string | null } | null>(
     null,
   );
-  // Card whose PATCH is in flight — shown as "saving" and not draggable again
-  // until the move settles.
+  // Card whose PATCH is in flight — shown as "saving" and not actionable
+  // again until the request settles.
   protected readonly pendingCardId = signal<number | null>(null);
   private readonly cards = signal<BoardCard[]>([]);
 
-  // One computed buckets the flat card list into the three columns; the
-  // backend already sorts by order, the sort here just makes it a local
-  // invariant instead of a remote one.
+  protected readonly attention = computed(() =>
+    this.cards().filter((c) => c.type === 'Safety').sort(byOrder),
+  );
+  protected readonly contacts = computed(() =>
+    this.cards().filter((c) => c.type === 'Contact').sort(byOrder),
+  );
+  private readonly tasks = computed(() => this.cards().filter((c) => c.type === 'Resource'));
+
   protected readonly columns = computed<BoardColumn[]>(() =>
     COLUMN_DEFS.map((def) => ({
       ...def,
-      cards: this.cards()
-        .filter((card) => card.status === def.status)
-        .sort((a, b) => a.order - b.order),
+      cards: this.tasks().filter((card) => card.status === def.status).sort(byOrder),
     })),
+  );
+
+  protected readonly attentionRead = computed(
+    () => this.attention().filter((c) => c.status === 'Done').length,
+  );
+  protected readonly tasksDone = computed(
+    () => this.tasks().filter((c) => c.status === 'Done').length,
+  );
+  protected readonly tasksTotal = computed(() => this.tasks().length);
+  protected readonly allDone = computed(
+    () =>
+      this.tasksTotal() > 0 &&
+      this.tasksDone() === this.tasksTotal() &&
+      this.attentionRead() === this.attention().length,
   );
 
   ngOnInit(): void {
     this.load();
+  }
+
+  protected markAsRead(card: BoardCard): void {
+    if (card.status !== 'Done') {
+      this.move(card, 'Done');
+    }
+  }
+
+  protected dismissMoveError(): void {
+    this.moveError.set(null);
   }
 
   // Dropping into the same column is a no-op (cards keep their template
@@ -67,45 +98,6 @@ export class BoardPage implements OnInit {
     }
 
     this.move(event.item.data as BoardCard, event.container.data);
-  }
-
-  protected dismissMoveError(): void {
-    this.moveError.set(null);
-  }
-
-  // Optimistic: the card jumps columns immediately; the PATCH runs after. On
-  // success the server DTO is taken as truth; on failure the card is put back
-  // where it was and the ProblemDetails correlation id is surfaced.
-  private move(card: BoardCard, newStatus: CardStatus): void {
-    const previousStatus = card.status;
-    this.setCardStatus(card.id, newStatus);
-    this.moveError.set(null);
-    this.pendingCardId.set(card.id);
-
-    this.boardService.moveCard(card.id, newStatus).subscribe({
-      next: (updated) => {
-        this.replaceCard(updated);
-        this.pendingCardId.set(null);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.setCardStatus(card.id, previousStatus);
-        this.pendingCardId.set(null);
-
-        const problem = err.error as { correlationId?: string } | null;
-        this.moveError.set({
-          message: `Could not move "${card.title}" — it has been put back.`,
-          correlationId: problem?.correlationId ?? null,
-        });
-      },
-    });
-  }
-
-  private setCardStatus(cardId: number, status: CardStatus): void {
-    this.cards.update((cards) => cards.map((c) => (c.id === cardId ? { ...c, status } : c)));
-  }
-
-  private replaceCard(updated: BoardCard): void {
-    this.cards.update((cards) => cards.map((c) => (c.id === updated.id ? updated : c)));
   }
 
   private load(): void {
@@ -137,5 +129,40 @@ export class BoardPage implements OnInit {
         });
       },
     });
+  }
+
+  // Optimistic: the card changes state immediately; the PATCH runs after. On
+  // success the server DTO is taken as truth; on failure the card is put back
+  // where it was and the ProblemDetails correlation id is surfaced.
+  private move(card: BoardCard, newStatus: CardStatus): void {
+    const previousStatus = card.status;
+    this.setCardStatus(card.id, newStatus);
+    this.moveError.set(null);
+    this.pendingCardId.set(card.id);
+
+    this.boardService.moveCard(card.id, newStatus).subscribe({
+      next: (updated) => {
+        this.replaceCard(updated);
+        this.pendingCardId.set(null);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.setCardStatus(card.id, previousStatus);
+        this.pendingCardId.set(null);
+
+        const problem = err.error as { correlationId?: string } | null;
+        this.moveError.set({
+          message: `Could not update "${card.title}" — it has been put back.`,
+          correlationId: problem?.correlationId ?? null,
+        });
+      },
+    });
+  }
+
+  private setCardStatus(cardId: number, status: CardStatus): void {
+    this.cards.update((cards) => cards.map((c) => (c.id === cardId ? { ...c, status } : c)));
+  }
+
+  private replaceCard(updated: BoardCard): void {
+    this.cards.update((cards) => cards.map((c) => (c.id === updated.id ? updated : c)));
   }
 }

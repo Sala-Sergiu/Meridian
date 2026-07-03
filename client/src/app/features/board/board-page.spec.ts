@@ -45,20 +45,23 @@ describe('BoardPage', () => {
     localStorage.clear();
   });
 
+  function element(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
   function columnCards(): Record<string, string[]> {
-    const element = fixture.nativeElement as HTMLElement;
     const result: Record<string, string[]> = {};
-    element.querySelectorAll('.column').forEach((column) => {
-      const label = column.querySelector('h3')!.textContent!.trim();
+    element().querySelectorAll('.column').forEach((column) => {
+      const label = column.querySelector('h4')!.textContent!.trim();
       result[label.replace(/\s+\d+$/, '').trim()] = Array.from(
-        column.querySelectorAll('.card h4'),
+        column.querySelectorAll('.card h5'),
         (h) => h.textContent!.trim(),
       );
     });
     return result;
   }
 
-  it('buckets cards into the three status columns sorted by order', () => {
+  it('buckets task cards into the three status columns sorted by order', () => {
     flushBoard(controller, [
       card({ id: 3, status: 'ToDo', order: 3 }),
       card({ id: 1, status: 'ToDo', order: 1 }),
@@ -73,89 +76,70 @@ describe('BoardPage', () => {
     expect(columns['Done']).toEqual(['Card 4']);
   });
 
-  it('treats a 404 (no board assigned) as an empty board, not an error', () => {
-    controller
-      .expectOne((r) => r.url === `${environment.apiBaseUrl}/boards/me`)
-      .flush(null, { status: 404, statusText: 'Not Found' });
-    fixture.detectChanges();
-
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.textContent).toContain('No onboarding board has been assigned to you yet');
-    expect(element.querySelectorAll('.column').length).toBe(3);
-    expect(element.querySelectorAll('.card').length).toBe(0);
-    expect(element.querySelector('app-error-banner')).toBeNull();
-  });
-
-  it('shows a loading state until the board arrives', () => {
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Loading your board');
-
-    flushBoard(controller, []);
-    fixture.detectChanges();
-
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Loading your board');
-  });
-
-  it('renders a color-coded type badge and a safe external link per card', () => {
+  it('shows safety cards under requires attention, not in the kanban', () => {
     flushBoard(controller, [
-      card({ id: 1, type: 'Safety', url: 'https://intranet.local/evacuation' }),
+      card({ id: 1, type: 'Safety', title: 'Safety rules' }),
+      card({ id: 2, type: 'Resource', title: 'Handbook' }),
     ]);
     fixture.detectChanges();
 
-    const element = fixture.nativeElement as HTMLElement;
-    const badge = element.querySelector('.card .type-safety');
-    expect(badge?.textContent?.trim()).toBe('Safety');
-
-    const link = element.querySelector<HTMLAnchorElement>('.card a')!;
-    expect(link.href).toBe('https://intranet.local/evacuation');
-    expect(link.target).toBe('_blank');
-    expect(link.rel).toBe('noopener');
-    expect(link.textContent).toContain('opens in a new tab');
+    const attention = element().querySelector('.attention')!;
+    expect(attention.textContent).toContain('Safety rules');
+    expect(attention.textContent).toContain('0 of 1 read');
+    expect(columnCards()['To do']).toEqual(['Handbook']);
   });
 
-  it('renders an in-app router link for relative card urls', () => {
-    flushBoard(controller, [card({ id: 1, url: '/resources/safety-basics' })]);
+  it('mark as read moves a safety card to Done optimistically and patches', () => {
+    flushBoard(controller, [card({ id: 5, type: 'Safety', title: 'Safety rules' })]);
     fixture.detectChanges();
 
-    const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('.card a')!;
-    expect(link.getAttribute('href')).toBe('/resources/safety-basics');
-    expect(link.textContent).toContain('View details');
-    expect(link.target).not.toBe('_blank');
+    element().querySelector<HTMLButtonElement>('.attention-item button')!.click();
+    fixture.detectChanges();
+
+    // Optimistic: read state shows BEFORE the server answers.
+    expect(element().querySelector('.attention')!.textContent).toContain('1 of 1 read');
+    expect(element().querySelector('.read-state')).not.toBeNull();
+
+    const req = controller.expectOne(`${environment.apiBaseUrl}/boards/me/cards/5`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'Done' });
+    req.flush({ ...card({ id: 5, type: 'Safety' }), status: 'Done' });
   });
 
-  it('shows a legend for the three card categories', () => {
-    flushBoard(controller, []);
+  it('renders contacts as reference info without any status control', () => {
+    flushBoard(controller, [
+      card({ id: 1, type: 'Contact', title: 'IT helpdesk', url: '/resources/it-helpdesk' }),
+    ]);
     fixture.detectChanges();
 
-    const legend = (fixture.nativeElement as HTMLElement).querySelector('.legend')!;
-    expect(legend.textContent).toContain('Resource');
-    expect(legend.textContent).toContain('Safety');
-    expect(legend.textContent).toContain('Contact');
+    const contacts = element().querySelector('.contacts')!;
+    expect(contacts.textContent).toContain('IT helpdesk');
+    expect(contacts.querySelector('a')?.getAttribute('href')).toBe('/resources/it-helpdesk');
+    expect(contacts.querySelector('button')).toBeNull();
+    expect(element().querySelectorAll('.card').length).toBe(0);
   });
 
-  it('shows a per-column empty state', () => {
-    flushBoard(controller, [card({ id: 1, status: 'ToDo' })]);
+  it('shows task progress and celebrates when everything is done and read', () => {
+    flushBoard(controller, [
+      card({ id: 1, type: 'Resource', status: 'Done' }),
+      card({ id: 2, type: 'Resource', status: 'Done' }),
+      card({ id: 3, type: 'Safety', status: 'Done' }),
+      card({ id: 4, type: 'Contact', status: 'ToDo' }), // contacts never count
+    ]);
     fixture.detectChanges();
 
-    const empties = (fixture.nativeElement as HTMLElement).querySelectorAll('.empty');
-    expect(empties.length).toBe(2);
-    expect(empties[0].textContent).toContain('Nothing here yet');
+    expect(element().querySelector('.progress-label')?.textContent).toContain('2 of 2 done');
+    expect(element().querySelector('.all-done')).not.toBeNull();
   });
 
-  it('shows the correlation id from ProblemDetails when the request fails', () => {
-    controller.expectOne((r) => r.url === `${environment.apiBaseUrl}/boards/me`).flush(
-      {
-        type: 'https://httpstatuses.io/500',
-        title: 'An unexpected error occurred.',
-        status: 500,
-        correlationId: 'corr-123',
-      },
-      { status: 500, statusText: 'Internal Server Error' },
-    );
+  it('does not celebrate while required reading is unread', () => {
+    flushBoard(controller, [
+      card({ id: 1, type: 'Resource', status: 'Done' }),
+      card({ id: 2, type: 'Safety', status: 'ToDo' }),
+    ]);
     fixture.detectChanges();
 
-    const text = (fixture.nativeElement as HTMLElement).textContent!;
-    expect(text).toContain('Could not load your board.');
-    expect(text).toContain('corr-123');
+    expect(element().querySelector('.all-done')).toBeNull();
   });
 
   // jsdom cannot perform a real pointer drag, so drop tests synthesize the
@@ -174,7 +158,7 @@ describe('BoardPage', () => {
     fixture.detectChanges();
   }
 
-  it('dropping a card into another column moves it optimistically, then patches', () => {
+  it('dropping a task into another column moves it optimistically, then patches', () => {
     const dragged = card({ id: 1, status: 'ToDo' });
     flushBoard(controller, [dragged]);
     fixture.detectChanges();
@@ -218,14 +202,13 @@ describe('BoardPage', () => {
     expect(columns['To do']).toEqual(['Card 1']);
     expect(columns['Done']).toEqual([]);
 
-    const element = fixture.nativeElement as HTMLElement;
-    const banner = element.querySelector('.move-error')!;
+    const banner = element().querySelector('.move-error')!;
     expect(banner.textContent).toContain('it has been put back');
     expect(banner.textContent).toContain('corr-move-9');
 
     banner.querySelector<HTMLButtonElement>('button')!.click();
     fixture.detectChanges();
-    expect(element.querySelector('.move-error')).toBeNull();
+    expect(element().querySelector('.move-error')).toBeNull();
   });
 
   it('marks the moved card as saving while the PATCH is in flight', () => {
@@ -235,18 +218,17 @@ describe('BoardPage', () => {
 
     drop(dragged, 'ToDo', 'InProgress');
 
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.card.saving')).not.toBeNull();
+    expect(element().querySelector('.card.saving')).not.toBeNull();
 
     controller
       .expectOne(`${environment.apiBaseUrl}/boards/me/cards/1`)
       .flush({ ...dragged, status: 'InProgress' });
     fixture.detectChanges();
 
-    expect(element.querySelector('.card.saving')).toBeNull();
+    expect(element().querySelector('.card.saving')).toBeNull();
   });
 
-  it('dropping a card into its own column is a no-op', () => {
+  it('dropping a task into its own column is a no-op', () => {
     const dragged = card({ id: 1, status: 'ToDo' });
     flushBoard(controller, [dragged]);
     fixture.detectChanges();
@@ -261,4 +243,51 @@ describe('BoardPage', () => {
     controller.expectNone(`${environment.apiBaseUrl}/boards/me/cards/1`);
   });
 
+  it('renders an in-app router link for relative card urls', () => {
+    flushBoard(controller, [card({ id: 1, url: '/resources/dev-setup' })]);
+    fixture.detectChanges();
+
+    const link = element().querySelector<HTMLAnchorElement>('.card a')!;
+    expect(link.getAttribute('href')).toBe('/resources/dev-setup');
+    expect(link.textContent).toContain('View details');
+    expect(link.target).not.toBe('_blank');
+  });
+
+  it('shows a loading state until the board arrives', () => {
+    expect(element().textContent).toContain('Loading your board');
+
+    flushBoard(controller, []);
+    fixture.detectChanges();
+
+    expect(element().textContent).not.toContain('Loading your board');
+  });
+
+  it('treats a 404 (no board assigned) as an empty board, not an error', () => {
+    controller
+      .expectOne((r) => r.url === `${environment.apiBaseUrl}/boards/me`)
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('No onboarding board has been assigned to you yet');
+    expect(element().querySelectorAll('.column').length).toBe(3);
+    expect(element().querySelectorAll('.card').length).toBe(0);
+    expect(element().querySelector('app-error-banner')).toBeNull();
+  });
+
+  it('shows the correlation id from ProblemDetails when the request fails', () => {
+    controller.expectOne((r) => r.url === `${environment.apiBaseUrl}/boards/me`).flush(
+      {
+        type: 'https://httpstatuses.io/500',
+        title: 'An unexpected error occurred.',
+        status: 500,
+        correlationId: 'corr-123',
+      },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+    fixture.detectChanges();
+
+    const text = element().textContent!;
+    expect(text).toContain('Could not load your board.');
+    expect(text).toContain('corr-123');
+  });
 });
