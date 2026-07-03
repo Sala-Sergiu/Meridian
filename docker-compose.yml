@@ -41,6 +41,9 @@ services:
       # local-dev connection string in appsettings.Development.json.
       ConnectionStrings__Default: "Server=mssql,1433;Database=Meridian;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Your_strong_Password123};TrustServerCertificate=True;Encrypt=False"
       Database__ApplyMigrationsAtStartup: "true"
+      # Demo convenience: assigns the seeded template to the seeded hire via
+      # the normal (idempotent) assignment flow — no HasData for boards.
+      Database__SeedDemoBoard: "true"
     ports:
       # Same host port as local dev (launchSettings), so the Angular dev
       # server's apiBaseUrl works unchanged against the compose stack.

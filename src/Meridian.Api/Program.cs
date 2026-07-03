@@ -1,6 +1,7 @@
 using Meridian.Api;
 using Meridian.Api.Middleware;
 using Meridian.Bll;
+using Meridian.Bll.Services;
 using Meridian.Dal;
 using Meridian.Dal.Persistence;
 using Serilog;
@@ -45,6 +46,21 @@ var app = builder.Build();
 if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsAtStartup"))
 {
     await DatabaseInitializer.ApplyMigrationsAsync(app.Services);
+}
+
+// Demo-only: give the seeded hire a board so the compose stack demos out of
+// the box. Deliberately NOT HasData — boards are born by assignment (cloning
+// is the single source of truth), so this goes through the same AssignAsync
+// the HR endpoint uses, which is idempotent (an existing board is returned,
+// never duplicated). Ids 1/1 are the HasData template and NewHire user.
+if (app.Configuration.GetValue<bool>("Database:SeedDemoBoard"))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var boards = scope.ServiceProvider.GetRequiredService<IOnboardingBoardService>();
+    var result = await boards.AssignAsync(templateId: 1, hireUserId: 1);
+    app.Logger.LogInformation(
+        "Demo board seed: {Outcome}.",
+        result is null ? "template missing, skipped" : result.AlreadyExisted ? "already assigned" : "assigned");
 }
 
 // Middleware order: correlation id -> request logging -> exception handler ->
